@@ -1,0 +1,5 @@
+sceneSetups:
+- path: Assets/GPUSkinning/Scenes/Mount_Sampler/Mount_Sampler.unity
+  isLoaded: 1
+  isActive: 1
+  isSubScene: 0
