@@ -2,3 +2,6 @@
 /Library
 /Logs
 /Temp
+/obj
+Assembly-CSharp.csproj
+*.csproj
