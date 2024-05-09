@@ -300,7 +300,7 @@ public class GPUSkinningPlayerResources
             mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade,
                 new Vector4(frameIndex_crossFade, lastPlayedClip.pixelSegmentation, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime))); //TODO 融合帧的插帧因子
             
-            Debug.LogFormat("上一个动画帧:{0}，下一个动画帧:{1}, 融合为因子：{2}", frameIndex_crossFade, frameIndex, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime));
+            //Debug.LogFormat("上一个动画帧:{0}，下一个动画帧:{1}, 融合为因子：{2}", frameIndex_crossFade, frameIndex, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime));
         }
     }
 
