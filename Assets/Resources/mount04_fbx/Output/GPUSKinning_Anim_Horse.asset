@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6dd8c482580fe4e09bcea6f4a052303b, type: 3}
   m_Name: GPUSKinning_Anim_Horse
   m_EditorClassIdentifier: 
-  guid: 26145da2-6197-422e-860e-05ca9489b756
+  guid: 76755afc-9c02-464d-8ffc-22d1c8f02701
   name: Horse
   bones:
   - bindpose:
@@ -427,7 +427,7 @@ MonoBehaviour:
     childrenBonesIndices: 
     name: Bone005
     guid: dd2fe2df51514f1d86b264d369da53d1
-    isExposed: 1
+    isExposed: 0
     isSkinningBone: 1
   - bindpose:
       e00: 0.032851197
@@ -910,7 +910,7 @@ MonoBehaviour:
     childrenBonesIndices: 
     name: d_mount
     guid: 01cd07a86d8420bd4e1f352ade9ca2f9
-    isExposed: 0
+    isExposed: 1
     isSkinningBone: 0
   - bindpose:
       e00: 1

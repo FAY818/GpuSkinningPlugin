@@ -144,60 +144,77 @@ public class GPUSkinningUtil
         return (float)frameIndex / (float)(totalFrams - 1);
     }
 
+    // public static Quaternion ToQuaternion(Matrix4x4 mat)
+    // {
+    //     float det = mat.determinant;
+    //     if (!CompareApproximately(det, 1.0F, .005f))
+    //         return Quaternion.identity;
+    //
+    //     Quaternion quat = Quaternion.identity;
+    //     float tr = mat.m00 + mat.m11 + mat.m22;
+    //
+    //     // check the diagonal
+    //     if (tr > 0.0f)
+    //     {
+    //         float fRoot = Mathf.Sqrt(tr + 1.0f); // 2w
+    //         quat.w = 0.5f * fRoot;
+    //         fRoot = 0.5f / fRoot; // 1/(4w)
+    //         quat.x = (mat[2, 1] - mat[1, 2]) * fRoot;
+    //         quat.y = (mat[0, 2] - mat[2, 0]) * fRoot;
+    //         quat.z = (mat[1, 0] - mat[0, 1]) * fRoot;
+    //     }
+    //     else
+    //     {
+    //         // |w| <= 1/2
+    //         int[] s_iNext = { 1, 2, 0 };
+    //         int i = 0;
+    //         if (mat.m11 > mat.m00)
+    //             i = 1;
+    //         if (mat.m22 > mat[i, i])
+    //             i = 2;
+    //         int j = s_iNext[i];
+    //         int k = s_iNext[j];
+    //
+    //         float fRoot = Mathf.Sqrt(mat[i, i] - mat[j, j] - mat[k, k] + 1.0f);
+    //         if (fRoot < float.Epsilon)
+    //             return Quaternion.identity;
+    //
+    //         quat[i] = 0.5f * fRoot;
+    //         fRoot = 0.5f / fRoot;
+    //         quat.w = (mat[k, j] - mat[j, k]) * fRoot;
+    //         quat[j] = (mat[j, i] + mat[i, j]) * fRoot;
+    //         quat[k] = (mat[k, i] + mat[i, k]) * fRoot;
+    //     }
+    //
+    //     return QuaternionNormalize(quat);
+    // }
+
     public static Quaternion ToQuaternion(Matrix4x4 mat)
     {
-        float det = mat.determinant;
-        if (!CompareApproximately(det, 1.0F, .005f))
-            return Quaternion.identity;
-
-        Quaternion quat = Quaternion.identity;
-        float tr = mat.m00 + mat.m11 + mat.m22;
-
-        // check the diagonal
-        if (tr > 0.0f)
-        {
-            float fRoot = Mathf.Sqrt(tr + 1.0f); // 2w
-            quat.w = 0.5f * fRoot;
-            fRoot = 0.5f / fRoot; // 1/(4w)
-            quat.x = (mat[2, 1] - mat[1, 2]) * fRoot;
-            quat.y = (mat[0, 2] - mat[2, 0]) * fRoot;
-            quat.z = (mat[1, 0] - mat[0, 1]) * fRoot;
-        }
-        else
-        {
-            // |w| <= 1/2
-            int[] s_iNext = { 1, 2, 0 };
-            int i = 0;
-            if (mat.m11 > mat.m00)
-                i = 1;
-            if (mat.m22 > mat[i, i])
-                i = 2;
-            int j = s_iNext[i];
-            int k = s_iNext[j];
-
-            float fRoot = Mathf.Sqrt(mat[i, i] - mat[j, j] - mat[k, k] + 1.0f);
-            if (fRoot < float.Epsilon)
-                return Quaternion.identity;
-
-            quat[i] = 0.5f * fRoot;
-            fRoot = 0.5f / fRoot;
-            quat.w = (mat[k, j] - mat[j, k]) * fRoot;
-            quat[j] = (mat[j, i] + mat[i, j]) * fRoot;
-            quat[k] = (mat[k, i] + mat[i, k]) * fRoot;
-        }
-
-        return QuaternionNormalize(quat);
+        return QuaternionNormalize(Quaternion.LookRotation(mat.GetColumn(2), mat.GetColumn(1)));
     }
 
     // 归一化
+    static Vector4 scaleCache = Vector4.zero;
+    static Quaternion quatCache = Quaternion.identity;
     public static Quaternion QuaternionNormalize(Quaternion quat)
     {
-        float scale = new Vector4(quat.x, quat.y, quat.z, quat.w).magnitude;
+        scaleCache.x = quat.x;
+        scaleCache.y = quat.y;
+        scaleCache.z = quat.z;
+        scaleCache.w = quat.w;
+        
+        float scale = scaleCache.magnitude;
         scale = 1.0f / scale;
 
-        return new Quaternion(scale * quat.x, scale * quat.y, scale * quat.z, scale * quat.w);
-    }
+        quatCache.x = scale * quat.x;
+        quatCache.y = scale * quat.y;
+        quatCache.z = scale * quat.z;
+        quatCache.w = scale * quat.w;
 
+        return quatCache;
+    }
+    
     public static bool CompareApproximately(float f0, float f1, float epsilon = 0.000001F)
     {
         float dist = (f0 - f1);

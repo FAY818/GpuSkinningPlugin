@@ -1439,8 +1439,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8176846173096596362}
   - component: {fileID: 6328989539216470315}
+  - component: {fileID: 27810860}
   m_Layer: 0
-  m_Name: man_Sample
+  m_Name: Man_Sample
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1473,11 +1474,47 @@ Animation:
   m_GameObject: {fileID: 8805151800008050992}
   m_Enabled: 1
   serializedVersion: 3
-  m_Animation: {fileID: 7400000, guid: 8423aa57d58514f90bb046422d999ed2, type: 2}
+  m_Animation: {fileID: 7400000, guid: 4fac3c98555b644d0a4f1e628990aefe, type: 2}
   m_Animations:
-  - {fileID: 7400000, guid: cd508be7410404ca4a9708ac6b31918a, type: 2}
-  - {fileID: 7400000, guid: 3d0df6a5500834b5eb6e3a035652a705, type: 2}
+  - {fileID: 7400000, guid: 4fac3c98555b644d0a4f1e628990aefe, type: 2}
+  - {fileID: 7400000, guid: 442f064a1e9f9449bb2c4478b57557cb, type: 2}
+  - {fileID: 7400000, guid: 056d325d798bf42ce9044365a1c6410f, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 0
   m_AnimatePhysics: 0
   m_CullingType: 0
+--- !u!114 &27810860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8805151800008050992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe19e3ecf340a450fb26713b2fa571b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animName: Man
+  animClips:
+  - {fileID: 7400000, guid: 4fac3c98555b644d0a4f1e628990aefe, type: 2}
+  - {fileID: 7400000, guid: 442f064a1e9f9449bb2c4478b57557cb, type: 2}
+  - {fileID: 7400000, guid: 056d325d798bf42ce9044365a1c6410f, type: 2}
+  wrapModes: 010000000000000000000000
+  fpsList: 000000000000000000000000
+  rootMotionEnabled: 000000
+  individualDifferenceEnabled: 000000
+  lodMeshes: []
+  lodDistances: []
+  sphereRadius: 1
+  createNewShader: 0
+  texture: {fileID: 4900000, guid: 0e2bda71f8c60407a8f7f5366857fa5f, type: 3}
+  textureBind: {fileID: 4900000, guid: 4bd92217bf3da4fcdbf5a285f8d307aa, type: 3}
+  skinQuality: 2
+  rootBoneTransform: {fileID: 8176846173096596362}
+  anim: {fileID: 11400000, guid: 1a06c5bc779174af9a3afc0e13e3ae86, type: 2}
+  shaderType: 0
+  savedMesh: {fileID: 4300000, guid: cb2edf1d05d18483b9d2a802d04fd3ac, type: 2}
+  savedMtrl: {fileID: 2100000, guid: fef9186a108f04d3480e953638091342, type: 2}
+  savedShader: {fileID: 4800000, guid: ae0e2033e7e09224e89d7a9a30730c59, type: 3}
+  updateOrNew: 1

@@ -19,20 +19,20 @@ public class AnimPlayer : MonoBehaviour
         {
             //_gpuSkinningPlayer.Play("a_stand");
             //_gpuSkinningPlayer.CrossFade("a_stand", 0.5f);
-            _gpuSkinningPlayer.CrossFade("Idle", 0.5f);
+            _gpuSkinningPlayer.CrossFade("b_move", 0.5f);
                 
         }
         if (Input.GetKeyDown(KeyCode.W))
         {
             //_gpuSkinningPlayer.Play("a_attack");
             //_gpuSkinningPlayer.CrossFade("a_attack", 0.5f);
-            _gpuSkinningPlayer.CrossFade("PlantNTurneft90", 0.5f);
+            _gpuSkinningPlayer.CrossFade("b_skill_8", 0.5f);
         }
         if (Input.GetKeyDown(KeyCode.E))
         {
             //_gpuSkinningPlayer.Play("a_move");
             //_gpuSkinningPlayer.CrossFade("a_move", 0.5f);
-            _gpuSkinningPlayer.CrossFade("Run", 0.5f);
+            _gpuSkinningPlayer.CrossFade("b_atk_2_3", 0.5f);
         }
     }
 }

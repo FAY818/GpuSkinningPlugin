@@ -580,21 +580,18 @@ public class GPUSkinningSampler : MonoBehaviour
     {
 		yield return new WaitForEndOfFrame();
 		
-        GPUSkinningBone[] bones = gpuSkinningAnimation.bones;
+	    GPUSkinningBone[] bones = gpuSkinningAnimation.bones;
         int numBones = bones.Length;
-        // 原插件的采样方式
+        // // 原插件的采样方式
         // for(int i = 0; i < numBones; ++i)
         // {
 	       //  GPUSkinningBone currentBone = bones[i];
-        //     frame.matrices[i] = currentBone.bindpose;
+	       //  Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
+        //     frame.matrices[i] = mat;
         //     // 向上遍历骨骼的所有父节点
         //     do
         //     {
-	       //      // 骨骼的变换矩阵
-        //         Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
-        //         // 模型空间-骨骼空间-父骨骼-...-根节点
-        //         frame.matrices[i] = mat * frame.matrices[i]; 
-        //         if (currentBone.parentBoneIndex == -1)
+	       //      if (currentBone.parentBoneIndex == -1)
         //         {
         //             break;
         //         }
@@ -602,9 +599,14 @@ public class GPUSkinningSampler : MonoBehaviour
         //         {
         //             currentBone = bones[currentBone.parentBoneIndex];
         //         }
+	       //      // 骨骼的变换矩阵
+	       //      mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
+	       //      // 模型空间-骨骼空间-父骨骼-...-根节点
+	       //      frame.matrices[i] = mat * frame.matrices[i]; 
         //     }
         //     while (true);
         // }
+        
         GPUSkinningBone currentBone;
         for (int i = 0; i < numBones; ++i)
         {
@@ -1010,15 +1012,15 @@ public class GPUSkinningSampler : MonoBehaviour
 		                Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindPose);
 		                Vector3 scale = matrix.lossyScale;
 		                Vector3 scaleBind = bindPose.lossyScale;
-		                var Pos = matrix.GetColumn(3);
+		                var pos = matrix.GetColumn(3);
 		                var bindPos = bindPose.GetColumn(3);
 	                
 		                pixels[pixelIndex] = new Color(rotation.x, rotation.y, rotation.z, rotation.w); // 旋转
 		                pixelsBind[pixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
 		                pixelIndex++;
 	                
-		                pixels[pixelIndex] = new Color(Pos.x, Pos.y, Pos.z, Mathf.Clamp01(scale.x)); // 位移与缩放
-		                pixelsBind[pixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, Mathf.Clamp01(scaleBind.x));
+		                pixels[pixelIndex] = new Color(pos.x, pos.y, pos.z, scale.x); // 位移与缩放
+		                pixelsBind[pixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
 		                pixelIndex++;
 	                }
                 }

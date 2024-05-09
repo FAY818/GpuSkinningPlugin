@@ -758,6 +758,11 @@ public class GPUSkinningPlayer
         for(int i = 0; i < numJoints; ++i)
         {
             GPUSkinningPlayerJoint joint = joints[i];
+            if (joint == null)
+            {
+                return;
+            }
+
             Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
             if (jointTransform != null)
             {
@@ -812,7 +817,6 @@ public class GPUSkinningPlayer
 
     private Vector4 crossPosCache = new Vector4();
     private Vector4 nextCrossPosCache = new Vector4();
-    
     private void UpdateJointsCrossFade(GPUSkinningFrame frameCrossFade, GPUSkinningFrame nextFrameCrossFade,  GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float interpolationFactor, float crossFadeBlendFactorGPUSkinningFrame)
     {
         if(joints == null)
@@ -903,14 +907,31 @@ public class GPUSkinningPlayer
     {
         if (joints == null)
         {
-            // 当前已经存在的挂点
-            GPUSkinningPlayerJoint[] existingJoints = go.GetComponentsInChildren<GPUSkinningPlayerJoint>();
+            // 原插件通过GetComponentsInChildren来找挂点的方式不适用于挂点的循环嵌套的情况
+            //GPUSkinningPlayerJoint[] existingJoints = go.GetComponentsInChildren<GPUSkinningPlayerJoint>();
+            GPUSkinningPlayerJoint[] existingJoints;
+            List<GPUSkinningPlayerJoint> existingJointsList = new List<GPUSkinningPlayerJoint>();
+            int childCount = go.transform.childCount;
+            if (childCount > 0)
+            {
+                for (int i = 0; i < childCount; i++)
+                {
+                    GPUSkinningPlayerJoint gpuSkinningPlayerJoint;
+                    if (go.transform.GetChild(i).TryGetComponent(out gpuSkinningPlayerJoint))
+                    {
+                        existingJointsList.Add(gpuSkinningPlayerJoint);
+                    }
+                }
+            }
+            existingJoints = existingJointsList.ToArray();
             
+            // 遍历骨骼数据
             GPUSkinningBone[] bones = res.anim.bones;
             int numBones = bones == null ? 0 : bones.Length;
             for (int i = 0; i < numBones; ++i)
             {
                 GPUSkinningBone bone = bones[i];
+                // 找到需要导出的骨骼节点
                 if (bone.isExposed)
                 {
                     if (joints == null)
@@ -918,6 +939,7 @@ public class GPUSkinningPlayer
                         joints = new List<GPUSkinningPlayerJoint>();
                     }
 
+                    // 如果当前节点已将存在，则更新信息
                     bool inTheExistingJoints = false;
                     if (existingJoints != null)
                     {
@@ -938,6 +960,7 @@ public class GPUSkinningPlayer
                         }
                     }
 
+                    // 挂点不存在就创建挂点
                     if(!inTheExistingJoints)
                     {
                         GameObject jointGo = new GameObject(bone.name);
@@ -967,12 +990,13 @@ public class GPUSkinningPlayer
             }
             else
             {
+                // 运行时，删除无效的节点
                 DeleteInvalidJoints(existingJoints);
             }
         }
     }
 
-    // 删除无效挂点
+    //删除无效挂点
     private void DeleteInvalidJoints(GPUSkinningPlayerJoint[] joints)
     {
         if (joints != null)
