@@ -997,11 +997,13 @@ public class GPUSkinningSampler : MonoBehaviour
 			    Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindMatrix);
 			    Vector3 scaleBind = bindMatrix.lossyScale;
 			    var bindPos = bindMatrix.GetColumn(3);
+			    var parentBone = gpuSkinningAnim.bones[curBone.parentBoneIndex];
+			    var parentBoneIndex = GetBoneIndex(parentBone);
 			    pixelsBind[bindPixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
 			    bindPixelIndex++;
 			    pixelsBind[bindPixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
 			    bindPixelIndex++;
-			    pixelsBind[bindPixelIndex] = new Color(curBone.parentBoneIndex, 0, 0, 0);
+			    pixelsBind[bindPixelIndex] = new Color(parentBoneIndex, 0, 0, 0);
 			    bindPixelIndex++;
 		    }
 	    }
