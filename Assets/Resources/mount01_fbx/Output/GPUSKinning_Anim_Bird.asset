@@ -10304,6 +10304,8 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   textureWidth: 32
   textureHeight: 32
+  bindTextureWidth: 8
+  bindTextureHeight: 8
   lodDistances:
   - 9999
   lodMeshes: []

@@ -26,6 +26,10 @@ public class GPUSkinningAnimation : ScriptableObject
     public int textureWidth = 0;
 
     public int textureHeight = 0;
+    
+    public int bindTextureWidth = 0;
+
+    public int bindTextureHeight = 0;
 
     public float[] lodDistances = null;
 

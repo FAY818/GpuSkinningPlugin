@@ -41,6 +41,22 @@ public class GPUSkinningUtil
 
         return texture;
     }
+    
+    public static Texture2D CreateBindTexture2D(TextAsset textureRawData, GPUSkinningAnimation anim)
+    {
+        if (textureRawData == null || anim == null)
+        {
+            return null;
+        }
+
+        Texture2D texture = new Texture2D(anim.bindTextureWidth, anim.bindTextureHeight, TextureFormat.RGBAHalf, false, true);
+        texture.name = "GPUSkinningBindTextureMatrix";
+        texture.filterMode = FilterMode.Point;
+        texture.LoadRawTextureData(textureRawData.bytes);
+        texture.Apply(false, true);
+
+        return texture;
+    }
 
     public static string BonesHierarchyTree(GPUSkinningAnimation gpuSkinningAnimation)
     {

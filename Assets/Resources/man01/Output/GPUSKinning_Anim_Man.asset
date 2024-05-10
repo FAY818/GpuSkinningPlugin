@@ -34,8 +34,8 @@ MonoBehaviour:
       e33: 1
     parentBoneIndex: -1
     childrenBonesIndices: 01000000290000002a000000
-    name: Man_Sample
-    guid: 59ae7701d502a7686d8169d8072380b5
+    name: man_Sample
+    guid: 92851f6d9ac19dbca8a42f39bde8d9dc
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -58,7 +58,7 @@ MonoBehaviour:
     parentBoneIndex: 0
     childrenBonesIndices: 02000000
     name: Bip001
-    guid: 5c6cbf95b8c6fe437c5a9cbf6e6ef900
+    guid: b55d15d19bb89b8c833121f2437d994b
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -81,7 +81,7 @@ MonoBehaviour:
     parentBoneIndex: 1
     childrenBonesIndices: 030000001d0000001f00000021000000230000002500000027000000
     name: Bip001 Pelvis
-    guid: 2efddc4c5ad958f739c0505a3980e936
+    guid: 331a62e77425319ea05803fea6573631
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -104,7 +104,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 04000000070000000a000000
     name: Bip001 Spine
-    guid: fde490155cb2477a6ab410d926d4fe29
+    guid: cd2a91f98d6d2700a9fc3039cc376b1c
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -127,7 +127,7 @@ MonoBehaviour:
     parentBoneIndex: 3
     childrenBonesIndices: 05000000
     name: Bip001 L Thigh
-    guid: 98217562d2ff7f6d9061769497b31e60
+    guid: 444ca4a25874201bb7f0c771019a9c4a
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -150,7 +150,7 @@ MonoBehaviour:
     parentBoneIndex: 4
     childrenBonesIndices: 06000000
     name: Bip001 L Calf
-    guid: 847af1296c46647db3ce097795f49392
+    guid: 9aaf7fd102d682356a343b9b62928166
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -173,7 +173,7 @@ MonoBehaviour:
     parentBoneIndex: 5
     childrenBonesIndices: 
     name: Bip001 L Foot
-    guid: 0bcfc1f75a5fd9d384035feb6f808034
+    guid: d8aac67446bdda767055d29f2a7dc0bd
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -196,7 +196,7 @@ MonoBehaviour:
     parentBoneIndex: 3
     childrenBonesIndices: 08000000
     name: Bip001 R Thigh
-    guid: eb788c8a502f734032703c9a91b6b840
+    guid: 9f7c65d641bef126646d0627c18bcaca
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -219,7 +219,7 @@ MonoBehaviour:
     parentBoneIndex: 7
     childrenBonesIndices: 09000000
     name: Bip001 R Calf
-    guid: ffa2de7bb3cf7238990911a52d28c588
+    guid: 212bbca08ef5faf7df64bd767ca9e4d3
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -242,7 +242,7 @@ MonoBehaviour:
     parentBoneIndex: 8
     childrenBonesIndices: 
     name: Bip001 R Foot
-    guid: f48486b35fae18be336408749fd347b2
+    guid: 42d1848d490255689a79be781113e3a4
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -265,7 +265,7 @@ MonoBehaviour:
     parentBoneIndex: 3
     childrenBonesIndices: 0b0000001c000000
     name: Bip001 Spine1
-    guid: ec44f164765438640cdcc04d2ba15511
+    guid: d0a00d8cab05de6dfe669017bb3c331c
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -288,7 +288,7 @@ MonoBehaviour:
     parentBoneIndex: 10
     childrenBonesIndices: 0c0000000f00000015000000
     name: Bip001 Neck
-    guid: 25dd6a9d15525284d4217d9606218537
+    guid: 64376ce0a6a50d8aab1fe0578c8046fb
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -311,7 +311,7 @@ MonoBehaviour:
     parentBoneIndex: 11
     childrenBonesIndices: 0d000000
     name: Bip001 Head
-    guid: f7305009609ed75bcfbcfe3fd5fa4f2b
+    guid: 64b22c077e608c5062a138bcf4647cc4
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -334,7 +334,7 @@ MonoBehaviour:
     parentBoneIndex: 12
     childrenBonesIndices: 0e000000
     name: Bone_hair01
-    guid: 389a56165eb17e03696bcc87b3c90efc
+    guid: 7f9529b844c78f81b7426eccd0835297
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -357,7 +357,7 @@ MonoBehaviour:
     parentBoneIndex: 13
     childrenBonesIndices: 
     name: Bone_hair02
-    guid: 1f43f4a0243e7522365a3183a4fde111
+    guid: a99fcfff0dbb7f98577ddacf8bedff0e
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -380,7 +380,7 @@ MonoBehaviour:
     parentBoneIndex: 11
     childrenBonesIndices: 10000000
     name: Bip001 L Clavicle
-    guid: 3f80f21aedb691631faf60336e0a2172
+    guid: 008ff2b4bff4e0cfce5ca9fd7dee69f2
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -403,7 +403,7 @@ MonoBehaviour:
     parentBoneIndex: 15
     childrenBonesIndices: 11000000
     name: Bip001 L UpperArm
-    guid: a383ed7946f4ee19c4cf3153a89ca6fb
+    guid: 3ac98b5b0a52cd1bba62bfb2d8211457
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -426,7 +426,7 @@ MonoBehaviour:
     parentBoneIndex: 16
     childrenBonesIndices: 1200000013000000
     name: Bip001 L Forearm
-    guid: 2489660252e986bfbf3c49116c18674c
+    guid: 49d233055ab74bc1121b4c7cc4e130d3
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -449,7 +449,7 @@ MonoBehaviour:
     parentBoneIndex: 17
     childrenBonesIndices: 
     name: Bip001 L Hand
-    guid: b869ae6881249acbfec5948618d96ea3
+    guid: 6e22c92f8567442b25f97aeb9b9bde3a
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -472,7 +472,7 @@ MonoBehaviour:
     parentBoneIndex: 17
     childrenBonesIndices: 14000000
     name: Bone_xiubai_l_01
-    guid: 9705ecc82a071260694ab9cbce569aea
+    guid: ada24ab30371a1854e1cc92139a27d18
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -495,7 +495,7 @@ MonoBehaviour:
     parentBoneIndex: 19
     childrenBonesIndices: 
     name: Bone_xiubai_l_02
-    guid: 7cb2ad01fb40ccc6ee2192cd8b351483
+    guid: 93b956f5dfadddccbdf6fc44825e8f43
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -518,7 +518,7 @@ MonoBehaviour:
     parentBoneIndex: 11
     childrenBonesIndices: 16000000
     name: Bip001 R Clavicle
-    guid: 1944d44c55c1bf2fdbfc61ee8f13a824
+    guid: 64253a7813f477e4f34d39eee5019379
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -541,7 +541,7 @@ MonoBehaviour:
     parentBoneIndex: 21
     childrenBonesIndices: 17000000
     name: Bip001 R UpperArm
-    guid: a8678b33216932c925ef17ff851673bf
+    guid: 490666d5489a79e83e4e4e49cf1786f4
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -564,7 +564,7 @@ MonoBehaviour:
     parentBoneIndex: 22
     childrenBonesIndices: 180000001a000000
     name: Bip001 R Forearm
-    guid: f756f89d190c0372e8b3b7587e0ac9a4
+    guid: 48720a719b1bcb522948be4efc4fc253
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -587,7 +587,7 @@ MonoBehaviour:
     parentBoneIndex: 23
     childrenBonesIndices: 19000000
     name: Bip001 R Hand
-    guid: 707d57332ebec26d72068d675bbaa9b5
+    guid: a2f74a392d6b5643daf6929ce0d3c721
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -610,8 +610,8 @@ MonoBehaviour:
     parentBoneIndex: 24
     childrenBonesIndices: 
     name: d_weapon_right
-    guid: ca337e9d2c3ffb163d1166db9387aef8
-    isExposed: 1
+    guid: 730f3dc5779a5f4cb11a4a260fafc465
+    isExposed: 0
     isSkinningBone: 0
   - bindpose:
       e00: -0.18781832
@@ -633,7 +633,7 @@ MonoBehaviour:
     parentBoneIndex: 23
     childrenBonesIndices: 1b000000
     name: Bone_xiubai_r_01
-    guid: a35fefe01591f0732105e48e43696224
+    guid: 173bd1d32301bfdb16e7f2fc9db64817
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -656,7 +656,7 @@ MonoBehaviour:
     parentBoneIndex: 26
     childrenBonesIndices: 
     name: Bone_xiubai_r_02
-    guid: 43beccacdcb7687459571b2864c2c901
+    guid: 9dea3ac9786cc927ae70c7e6adcf80b1
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -679,7 +679,7 @@ MonoBehaviour:
     parentBoneIndex: 10
     childrenBonesIndices: 
     name: d_fly
-    guid: 424f9653be20a3b0c388bd68e7a77082
+    guid: 1c9348f317dcddfbca41f045219f8c33
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -702,7 +702,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 1e000000
     name: Bone_qunbai01
-    guid: 7a091720886e7b356f70acbc082625aa
+    guid: fe141286e939cef01ffab69f0e2b3f3e
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -725,7 +725,7 @@ MonoBehaviour:
     parentBoneIndex: 29
     childrenBonesIndices: 
     name: Bone_qunbai07
-    guid: a608425788e80dec43b667b68354617f
+    guid: fbe5557eee36e35c91cf7db934250c36
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -748,7 +748,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 20000000
     name: Bone_qunbai02
-    guid: 324008dbb33e3c8ffb049e967f40604c
+    guid: e78fdb45cb7249ec74e39b16ca3a9593
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -771,7 +771,7 @@ MonoBehaviour:
     parentBoneIndex: 31
     childrenBonesIndices: 
     name: Bone_qunbai08
-    guid: a5910e7422928d6c47b501166eab5423
+    guid: ca419be7bbdcc79de1c6fd2b328af80f
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -794,7 +794,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 22000000
     name: Bone_qunbai03
-    guid: 7d25a23997638f5ce8ccda9ec373cce9
+    guid: 5d1bbc4b7b6a08b3a1424d0cff1d0a41
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -817,7 +817,7 @@ MonoBehaviour:
     parentBoneIndex: 33
     childrenBonesIndices: 
     name: Bone_qunbai09
-    guid: c3ff013e524fc1e904b36eddbe47671a
+    guid: 1e244553a7947b0d91def437e767d323
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -840,7 +840,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 24000000
     name: Bone_qunbai04
-    guid: 32c1707a01089e7a879b62ff4fa33ace
+    guid: a090df406b7a25d92aa1abb07c1b3f1e
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -863,7 +863,7 @@ MonoBehaviour:
     parentBoneIndex: 35
     childrenBonesIndices: 
     name: Bone_qunbai10
-    guid: 6e06f94bd1258e3fc106ff457ffe33ba
+    guid: cd8f71d7d53daf0ba1dddecda3306b7c
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -886,7 +886,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 26000000
     name: Bone_qunbai05
-    guid: 5552ab2023703d2971bd4737b459ffbb
+    guid: ad06dc7b79bb39919accde2f9354bcbb
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -909,7 +909,7 @@ MonoBehaviour:
     parentBoneIndex: 37
     childrenBonesIndices: 
     name: Bone_qunbai11
-    guid: 8916739986b9732079d009deb853eff2
+    guid: 7b19955b51f15e8c6029c27bb3e8509c
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -932,7 +932,7 @@ MonoBehaviour:
     parentBoneIndex: 2
     childrenBonesIndices: 28000000
     name: Bone_qunbai06
-    guid: b3f4224dbb6a3e0953560717c635bbaf
+    guid: 14ff1606465c5faadb294a8d6a23ca77
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -955,7 +955,7 @@ MonoBehaviour:
     parentBoneIndex: 39
     childrenBonesIndices: 
     name: Bone_qunbai12
-    guid: 8df19959917692e576f061e192fc87c5
+    guid: 32ff30305be5f8e068002806cc901d3e
     isExposed: 0
     isSkinningBone: 1
   - bindpose:
@@ -978,7 +978,7 @@ MonoBehaviour:
     parentBoneIndex: 0
     childrenBonesIndices: 
     name: d_root
-    guid: bdc54d375a4c977856370336a2fa8536
+    guid: b328ad9df2e179a48606a55038000ac0
     isExposed: 0
     isSkinningBone: 0
   - bindpose:
@@ -1001,7 +1001,7 @@ MonoBehaviour:
     parentBoneIndex: 0
     childrenBonesIndices: 
     name: man01
-    guid: e0f4bcd2c742663c29596cbbb53d604c
+    guid: 789aa37add0ba96ded5ddb1c4af204f0
     isExposed: 0
     isSkinningBone: 0
   skinningBoneNum: 34
@@ -70240,6 +70240,8 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   textureWidth: 128
   textureHeight: 64
+  bindTextureWidth: 16
+  bindTextureHeight: 8
   lodDistances:
   - 9999
   lodMeshes: []

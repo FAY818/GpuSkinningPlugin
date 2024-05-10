@@ -9,6 +9,7 @@ uniform sampler2D _GPUSkinning_TextureMatrix;
 uniform sampler2D _GPUSkinning_TextureBindMatrix;
 
 uniform float4 _GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor; // x:textureWidth, y:textureHeight, z:每帧需要的纹素数量
+uniform float2 _GPUSkinning_BindTextureSize;
 
 UNITY_INSTANCING_BUFFER_START(GPUSkinningProperties0)
 UNITY_DEFINE_INSTANCED_PROP(float2, _GPUSkinning_FrameIndex_PixelSegmentation) // 采样帧率和纹素尺寸
@@ -97,6 +98,14 @@ inline float4 indexToUV(float index)
                   row / _GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor.y, 0, 0);
 }
 
+inline float4 bindIndexToUV(float index)
+{
+	int row = (int)(index / _GPUSkinning_BindTextureSize.x); // 除以textureWidth
+	float col = index - row * _GPUSkinning_BindTextureSize.x;
+	return float4(col / _GPUSkinning_BindTextureSize.x,
+				  row / _GPUSkinning_BindTextureSize.y, 0, 0);
+}
+
 inline float4 Slerp(float4 q1, float4 q2, float t)
 {
     float cos_a = dot(q1, q2);
@@ -124,16 +133,22 @@ inline float4 NormalLerp(float4 q1, float4 q2, float t)
 //获取补帧的变换矩阵信息
 inline float4x4 getMatrix(float frameStartIndex, float nextframeStartIndex, float boneIndex)
 {
-    float frameInterpFactor = _GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor.w;
-    // 当前帧的变化矩阵
+	int bindMatStartIndex = boneIndex * 3;
+	float4 UV1 = bindIndexToUV(bindMatStartIndex);
+	float4 UV2 = bindIndexToUV(bindMatStartIndex + 1);
+	float4 UV3 = bindIndexToUV(bindMatStartIndex + 2);
+	float4 dualBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, UV1);
+	float4 realBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, UV2);
+	float4 parentBoneIndex = tex2Dlod(_GPUSkinning_TextureBindMatrix, UV3);
+
+	float frameInterpFactor = _GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor.w;
+	// 当前帧的变化矩阵
     int curFrameIndex = frameStartIndex;
     int curMatStartIndex = curFrameIndex + boneIndex * 2;
 	float4 curUV1 = indexToUV(curMatStartIndex);
 	float4 curUV2 = indexToUV(curMatStartIndex + 1);
     float4 curDual = tex2Dlod(_GPUSkinning_TextureMatrix, curUV1);
     float4 curReal = tex2Dlod(_GPUSkinning_TextureMatrix, curUV2);
-	float4 curDualBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, curUV1);
-	float4 curRealBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, curUV2);
 	
     //下一帧的变换矩阵
     int nextFrameIndex = nextframeStartIndex;
@@ -142,14 +157,10 @@ inline float4x4 getMatrix(float frameStartIndex, float nextframeStartIndex, floa
 	float4 nextUV2 = indexToUV(nextMatStartIndex + 1);
     float4 nextDual = tex2Dlod(_GPUSkinning_TextureMatrix, nextUV1);
     float4 nextReal = tex2Dlod(_GPUSkinning_TextureMatrix, nextUV2);
-	float4 nextDualBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, nextUV1);
-	float4 nextRealBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, nextUV2);
 
 	// 插帧
 	float4 dual = Slerp(curDual, nextDual, frameInterpFactor);
 	float4 real = lerp(curReal, nextReal, frameInterpFactor);
-	float4 dualBind = Slerp(curDualBind, nextDualBind, frameInterpFactor);
-	float4 realBind = lerp(curRealBind, nextRealBind, frameInterpFactor);
 	
     float4x4 curMat = DualQuaternionToMatrix(dual, real);
 	float4x4 bindMat = DualQuaternionToMatrix(dualBind, realBind);
@@ -160,7 +171,14 @@ inline float4x4 getMatrix(float frameStartIndex, float nextframeStartIndex, floa
 //获取融合矩阵
 inline float4x4 getCrossFadeMatrix(float startIndexA, float startIndexB, float boneIndex, float crossFadeBlend)
 {
-
+	int bindMatStartIndex = boneIndex * 3;
+	float4 UV1 = bindIndexToUV(bindMatStartIndex);
+	float4 UV2 = bindIndexToUV(bindMatStartIndex + 1);
+	float4 UV3 = bindIndexToUV(bindMatStartIndex + 2);
+	float4 dualBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, UV1);
+	float4 realBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, UV2);
+	float4 parentBoneIndex = tex2Dlod(_GPUSkinning_TextureBindMatrix, UV3);
+	
 	float frameInterpFactorA = frac(startIndexA);
 	// 当前帧取样
 	int curFrameIndexA = startIndexA;
@@ -169,8 +187,6 @@ inline float4x4 getCrossFadeMatrix(float startIndexA, float startIndexB, float b
 	float4 curUV2A = indexToUV(curMatStartIndexA + 1);
 	float4 curDualA = tex2Dlod(_GPUSkinning_TextureMatrix, curUV1A);
 	float4 curRealA = tex2Dlod(_GPUSkinning_TextureMatrix, curUV2A);
-	float4 curDualBindA = tex2Dlod(_GPUSkinning_TextureBindMatrix, curUV1A);
-	float4 curRealBindA = tex2Dlod(_GPUSkinning_TextureBindMatrix, curUV2A);
 	//下一帧取样
 	int nextFrameIndexA = curFrameIndexA + 1;
 	float nextMatStartIndexA = nextFrameIndexA + boneIndex * 2;
@@ -178,13 +194,9 @@ inline float4x4 getCrossFadeMatrix(float startIndexA, float startIndexB, float b
 	float4 nextUV2A = indexToUV(nextMatStartIndexA + 1);
 	float4 nextDualA = tex2Dlod(_GPUSkinning_TextureMatrix, nextUV1A);
 	float4 nextRealA = tex2Dlod(_GPUSkinning_TextureMatrix, nextUV2A);
-	float4 nextDualBindA = tex2Dlod(_GPUSkinning_TextureBindMatrix, nextUV1A);
-	float4 nextRealBindA = tex2Dlod(_GPUSkinning_TextureBindMatrix, nextUV2A);
 	// 插帧
 	float4 dualA = Slerp(curDualA, nextDualA, frameInterpFactorA);
 	float4 realA = lerp(curRealA, nextRealA, frameInterpFactorA);
-	float4 dualBindA = Slerp(curDualBindA, nextDualBindA, frameInterpFactorA);
-	float4 realBindA = lerp(curRealBindA, nextRealBindA, frameInterpFactorA);
 	
 	float frameInterpFactorB = frac(startIndexB);
 	// 当前帧取样
@@ -194,8 +206,7 @@ inline float4x4 getCrossFadeMatrix(float startIndexA, float startIndexB, float b
 	float4 curUV2B = indexToUV(curMatStartIndexB + 1);
 	float4 curDualB = tex2Dlod(_GPUSkinning_TextureMatrix, curUV1B);
 	float4 curRealB = tex2Dlod(_GPUSkinning_TextureMatrix, curUV2B);
-	float4 curDualBindB = tex2Dlod(_GPUSkinning_TextureBindMatrix, curUV1B);
-	float4 curRealBindB = tex2Dlod(_GPUSkinning_TextureBindMatrix, curUV2B);
+	
 	//下一帧取样
 	int nextFrameIndexB = curFrameIndexB + 1;
 	float nextMatStartIndexB = nextFrameIndexB + boneIndex * 2;
@@ -203,19 +214,14 @@ inline float4x4 getCrossFadeMatrix(float startIndexA, float startIndexB, float b
 	float4 nextUV2B = indexToUV(nextMatStartIndexB + 1);
 	float4 nextDualB = tex2Dlod(_GPUSkinning_TextureMatrix, nextUV1B);
 	float4 nextRealB = tex2Dlod(_GPUSkinning_TextureMatrix, nextUV2B);
-	float4 nextDualBindB = tex2Dlod(_GPUSkinning_TextureBindMatrix, nextUV1B);
-	float4 nextRealBindB = tex2Dlod(_GPUSkinning_TextureBindMatrix, nextUV2B);
+	
 	// 插帧
 	float4 dualB = Slerp(curDualB, nextDualB, frameInterpFactorB);
 	float4 realB = lerp(curRealB, nextRealB, frameInterpFactorB);
-	float4 dualBindB = Slerp(curDualBindB, nextDualBindB, frameInterpFactorB);
-	float4 realBindB = lerp(curRealBindB, nextRealBindB, frameInterpFactorB);
-
+	
 	// 融合插帧
 	float4 dual = Slerp(dualA, dualB, crossFadeBlend);
 	float4 real = lerp(realA, realB, crossFadeBlend);
-	float4 dualBind = Slerp(dualBindA, dualBindB, crossFadeBlend);
-	float4 realBind = lerp(realBindA, realBindB, crossFadeBlend);
 	
 	float4x4 mat = DualQuaternionToMatrix(dual, real);
 	float4x4 matBind = DualQuaternionToMatrix(dualBind, realBind);

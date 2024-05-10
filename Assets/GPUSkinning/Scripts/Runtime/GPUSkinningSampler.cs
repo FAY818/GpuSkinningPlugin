@@ -234,6 +234,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
 					string savedAnimPath = dir + "/GPUSKinning_Anim_" + animName + ".asset";
                     SetSthAboutTexture(gpuSkinningAnimation);
+                    SetBindBoneTexture(gpuSkinningAnimation);
                     EditorUtility.SetDirty(gpuSkinningAnimation);
                     if (anim != gpuSkinningAnimation)
                     {
@@ -969,21 +970,61 @@ public class GPUSkinningSampler : MonoBehaviour
 		    texHeight *= 2;
 	    }
     }
-    
-	/// <summary>
+
+    private void SetBindBoneTexture(GPUSkinningAnimation gpuSkinningAnim)
+    {
+	    int numPixels = gpuSkinningAnim.skinningBoneNum * 3;
+	    CalculateTextureSize(numPixels, out gpuSkinningAnim.bindTextureWidth, out gpuSkinningAnim.bindTextureHeight);
+    }
+
+    /// <summary>
     /// 创建纹理贴图文件，保存格式为.bytes
     /// </summary>
     /// <param name="dir"></param>
     /// <param name="gpuSkinningAnim"></param>
     private void CreateTextureMatrix(string dir, GPUSkinningAnimation gpuSkinningAnim)
     {
+	    Texture2D textureBind = new Texture2D(gpuSkinningAnim.bindTextureWidth, gpuSkinningAnim.bindTextureHeight, TextureFormat.RGBAHalf, false, true);
+	    textureBind.filterMode = FilterMode.Point;
+	    Color[] pixelsBind = textureBind.GetPixels();
+	    int bindPixelIndex = 0;
+	    for (int i = 0; i < gpuSkinningAnim.bones.Length; i++)
+	    {
+		    GPUSkinningBone curBone = gpuSkinningAnim.bones[i];
+		    if (curBone.isSkinningBone)
+		    {
+			    Matrix4x4 bindMatrix = curBone.bindpose;
+			    Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindMatrix);
+			    Vector3 scaleBind = bindMatrix.lossyScale;
+			    var bindPos = bindMatrix.GetColumn(3);
+			    pixelsBind[bindPixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
+			    bindPixelIndex++;
+			    pixelsBind[bindPixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
+			    bindPixelIndex++;
+			    pixelsBind[bindPixelIndex] = new Color(curBone.parentBoneIndex, 0, 0, 0);
+			    bindPixelIndex++;
+		    }
+	    }
+	    
+	    textureBind.SetPixels(pixelsBind);
+	    textureBind.Apply();
+	    
+	    string savedPathBind = dir + "/GPUSKinning_TextureBind_" + animName + ".bytes";
+	    using (FileStream fileStream = new FileStream(savedPathBind, FileMode.Create))
+	    {
+		    byte[] bytes = textureBind.GetRawTextureData();
+		    fileStream.Write(bytes, 0, bytes.Length);
+		    fileStream.Flush();
+		    fileStream.Close();
+		    fileStream.Dispose();
+	    }
+	    WriteTempData(TEMP_SAVED_TEXTUREBIND_PATH, savedPathBind);
+	    
+	    
         Texture2D texture = new Texture2D(gpuSkinningAnim.textureWidth, gpuSkinningAnim.textureHeight, TextureFormat.RGBAHalf, false, true);
-        Texture2D textureBind = new Texture2D(gpuSkinningAnim.textureWidth, gpuSkinningAnim.textureHeight, TextureFormat.RGBAHalf, false, true);
         texture.filterMode = FilterMode.Point;
-        textureBind.filterMode = FilterMode.Point;
         Color[] pixels = texture.GetPixels();
-        Color[] pixelsBind = textureBind.GetPixels();
-	    int pixelIndex = 0; // 像素索引
+        int pixelIndex = 0; // 像素索引
         // 逐动画
         for (int clipIndex = 0; clipIndex < gpuSkinningAnim.clips.Length; ++clipIndex)
         {
@@ -1007,20 +1048,12 @@ public class GPUSkinningSampler : MonoBehaviour
 	                if (gpuSkinningAnim.bones[matrixIndex].isSkinningBone)
 	                {
 		                Matrix4x4 matrix = matrices[matrixIndex]; // 骨骼的变换矩阵
-		                Matrix4x4 bindPose = gpuSkinningAnim.bones[matrixIndex].bindpose; // 绑定矩阵
 		                Quaternion rotation = GPUSkinningUtil.ToQuaternion(matrix); // 提取旋转相关的4元数
-		                Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindPose);
 		                Vector3 scale = matrix.lossyScale;
-		                Vector3 scaleBind = bindPose.lossyScale;
 		                var pos = matrix.GetColumn(3);
-		                var bindPos = bindPose.GetColumn(3);
-	                
 		                pixels[pixelIndex] = new Color(rotation.x, rotation.y, rotation.z, rotation.w); // 旋转
-		                pixelsBind[pixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
 		                pixelIndex++;
-	                
 		                pixels[pixelIndex] = new Color(pos.x, pos.y, pos.z, scale.x); // 位移与缩放
-		                pixelsBind[pixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
 		                pixelIndex++;
 	                }
                 }
@@ -1028,8 +1061,6 @@ public class GPUSkinningSampler : MonoBehaviour
         }
         texture.SetPixels(pixels);
         texture.Apply();
-        textureBind.SetPixels(pixelsBind);
-        textureBind.Apply();
         
         string savedPath = dir + "/GPUSKinning_Texture_" + animName + ".bytes";
         using (FileStream fileStream = new FileStream(savedPath, FileMode.Create))
@@ -1041,17 +1072,6 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
         WriteTempData(TEMP_SAVED_TEXTURE_PATH, savedPath);
-        
-        string savedPathBind = dir + "/GPUSKinning_TextureBind_" + animName + ".bytes";
-        using (FileStream fileStream = new FileStream(savedPathBind, FileMode.Create))
-        {
-	        byte[] bytes = textureBind.GetRawTextureData();
-	        fileStream.Write(bytes, 0, bytes.Length);
-	        fileStream.Flush();
-	        fileStream.Close();
-	        fileStream.Dispose();
-        }
-        WriteTempData(TEMP_SAVED_TEXTUREBIND_PATH, savedPathBind);
     }
 	
     #endregion

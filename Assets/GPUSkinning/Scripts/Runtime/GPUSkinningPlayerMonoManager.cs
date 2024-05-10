@@ -52,7 +52,7 @@ public class GPUSkinningPlayerMonoManager
         
         if(item.textureBind == null)
         {
-            item.textureBind = GPUSkinningUtil.CreateTexture2D(textureBindRawData, anim);
+            item.textureBind = GPUSkinningUtil.CreateBindTexture2D(textureBindRawData, anim);
         }
 
         if (!item.players.Contains(player))

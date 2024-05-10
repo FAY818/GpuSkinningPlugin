@@ -71,6 +71,8 @@ public class GPUSkinningPlayerResources
     private static int shaderPropID_GPUSkinning_TextureBindMatrix = -1;
     // 贴图的尺寸信息
     private static int shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor = 0;
+    // 矩阵绑定贴图的尺寸信息
+    private static int shaderPropID_GPUSkinning_BindTextureSize = 0;
     // 设置采样帧率和动画间的纹素间隔
     private static int shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation = 0;
     // 当前RootMotion的BindPose的逆矩阵
@@ -87,6 +89,7 @@ public class GPUSkinningPlayerResources
             shaderPropID_GPUSkinning_TextureBindMatrix = Shader.PropertyToID("_GPUSkinning_TextureBindMatrix");
             shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
             shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor = Shader.PropertyToID("_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor");
+            shaderPropID_GPUSkinning_BindTextureSize = Shader.PropertyToID("_GPUSkinning_BindTextureSize");
             shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_FrameIndex_PixelSegmentation");
             shaderPropID_GPUSkinning_RootMotion = Shader.PropertyToID("_GPUSkinning_RootMotion");
             shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade = Shader.PropertyToID("_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade");
@@ -255,6 +258,8 @@ public class GPUSkinningPlayerResources
             mtrl.material.SetTexture(shaderPropID_GPUSkinning_TextureBindMatrix, textureBind);
             mtrl.material.SetVector(shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor, 
                 new Vector4(anim.textureWidth, anim.textureHeight, anim.skinningBoneNum * 2, interpolationFactor));
+            mtrl.material.SetVector(shaderPropID_GPUSkinning_BindTextureSize, new Vector4(anim.bindTextureWidth, anim.bindTextureHeight));
+            
         }
     }
 
