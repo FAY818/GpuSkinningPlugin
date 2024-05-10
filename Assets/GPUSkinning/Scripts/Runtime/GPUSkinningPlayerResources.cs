@@ -298,19 +298,37 @@ public class GPUSkinningPlayerResources
                 mpb.SetMatrix(shaderPropID_GPUSkinning_RootMotion_CrossFade, lastPlayedClip.frames[frameIndex_crossFade].RootMotionInv(anim.rootBoneIndex, anim.bones[anim.rootBoneIndex].bindpose));
             }
             mpb.SetVector(shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade,
-                new Vector4(frameIndex_crossFade, lastPlayedClip.pixelSegmentation, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime))); //TODO 融合帧的插帧因子
+                new Vector4(frameIndex_crossFade, lastPlayedClip.pixelSegmentation, GetBlendFactor(crossFadeProgress, crossFadeTime))); //TODO 融合帧的插帧因子
             
             //Debug.LogFormat("上一个动画帧:{0}，下一个动画帧:{1}, 融合为因子：{2}", frameIndex_crossFade, frameIndex, CrossFadeBlendFactor(crossFadeProgress, crossFadeTime));
         }
     }
 
-    /// <summary>
-    /// 融合因子（融合比率）
-    /// </summary>
-    public float CrossFadeBlendFactor(float crossFadeProgress, float crossFadeTime)
+    public float GetBlendFactor(float crossFadeProgress, float crossFadeTime)
+    {
+        return BezierBlendFactor(crossFadeProgress, crossFadeTime);
+    }
+    
+    private float LinearBlendFactor(float crossFadeProgress, float crossFadeTime)
     {
         return Mathf.Clamp01(crossFadeProgress / crossFadeTime);
     }
+
+    private float BezierBlendFactor(float crossFadeProgress, float crossFadeTime)
+    {
+        float bStart = 0f; // 开始时的融合因子
+        float bEnd = 1f; // 结束时的融合因子
+        
+        float t = Mathf.Clamp01(crossFadeProgress / crossFadeTime);
+        float oneMinusT = 1f - t;
+        float a = oneMinusT * oneMinusT * oneMinusT;
+        float b = 3 * oneMinusT * oneMinusT * t;
+        float c = 3 * oneMinusT * t * t;
+        float d = t * t * t;
+        // 这里将Bezier的切线都视为混合因子bStart和bEnd
+        return (a + b) * bStart + (c + d) * bEnd;
+    }
+
 
     /// <summary>
     /// 判定是否可以动画融合

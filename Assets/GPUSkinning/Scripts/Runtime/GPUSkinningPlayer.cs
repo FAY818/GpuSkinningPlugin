@@ -453,7 +453,7 @@ public class GPUSkinningPlayer
                 int nextIndexCrossFade = GetNextCrossFadeFrameIndex();
                 GPUSkinningFrame frameCrossFade = lastPlayedClip.frames[frameIndexCrossFade];
                 GPUSkinningFrame nextFrameCrossFade = lastPlayedClip.frames[nextIndexCrossFade];
-                float crossFadeBlendFactor = res.CrossFadeBlendFactor(crossFadeProgress, crossFadeTime);
+                float crossFadeBlendFactor = res.GetBlendFactor(crossFadeProgress, crossFadeTime);
                 UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, interpolationFactor, crossFadeBlendFactor);
                 
             }
@@ -471,7 +471,7 @@ public class GPUSkinningPlayer
         {
             frameIndex_crossFade = GetCrossFadeFrameIndex(); // 融合帧
             frame_crossFade = lastPlayedClip.frames[frameIndex_crossFade]; // 融合帧的数据
-            blend_crossFade = res.CrossFadeBlendFactor(crossFadeProgress, crossFadeTime); // 融合比率
+            blend_crossFade = res.GetBlendFactor(crossFadeProgress, crossFadeTime); // 融合比率
         }
         
         // RootMotion
@@ -639,6 +639,7 @@ public class GPUSkinningPlayer
             return 0;
         }
 
+        //冻结过渡
         if (lastPlayedClip.wrapMode == GPUSkinningWrapMode.Once)
         {
             if (lastPlayedTime >= lastPlayedClip.length)
@@ -652,6 +653,7 @@ public class GPUSkinningPlayer
                 return GetFrameIndex_WrapMode_Loop(lastPlayedClip, lastPlayedTime);
             }
         }
+        // 平滑过渡
         else if (lastPlayedClip.wrapMode == GPUSkinningWrapMode.Loop)
         {
             // 循环播放，返回当前帧

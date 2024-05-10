@@ -115,6 +115,12 @@ inline float4 Slerp(float4 q1, float4 q2, float t)
     return (q1 * sin((1 - t) * a) + q2 * sin(t * a)) / sin(a);
 }
 
+inline float4 NormalLerp(float4 q1, float4 q2, float t)
+{
+	normalize(q1 * (1 - t) + q2 * t);
+}
+
+
 //获取补帧的变换矩阵信息
 inline float4x4 getMatrix(float frameStartIndex, float nextframeStartIndex, float boneIndex)
 {
