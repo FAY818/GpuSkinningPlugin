@@ -33,7 +33,7 @@ public class GPUSkinningPlayer
 
     private GPUSkinningClip lastPlayingClip = null; // 上一帧播的动画
 
-    private GPUSkinningClip playingClip = null; 
+    private GPUSkinningClip playingClip = null;
 
     private GPUSkinningPlayerResources res = null;
 
@@ -47,12 +47,10 @@ public class GPUSkinningPlayer
     /// 当前动画播放器的Mono脚本是否开启RootMotion
     /// </summary>
     private bool rootMotionEnabled = false;
+
     public bool RootMotionEnabled
     {
-        get
-        {
-            return rootMotionEnabled;
-        }
+        get { return rootMotionEnabled; }
         set
         {
             rootMotionFrameIndex = -1;
@@ -61,39 +59,27 @@ public class GPUSkinningPlayer
     }
 
     private GPUSKinningCullingMode cullingMode = GPUSKinningCullingMode.CullUpdateTransforms;
+
     public GPUSKinningCullingMode CullingMode
     {
-        get
-        {
-            return Application.isPlaying ? cullingMode : GPUSKinningCullingMode.AlwaysAnimate;
-        }
-        set
-        {
-            cullingMode = value;
-        }
+        get { return Application.isPlaying ? cullingMode : GPUSKinningCullingMode.AlwaysAnimate; }
+        set { cullingMode = value; }
     }
 
     // 动画的可见性
     private bool visible = false;
+
     public bool Visible
     {
-        get
-        {
-            return Application.isPlaying ? visible : true;
-        }
-        set
-        {
-            visible = value;
-        }
+        get { return Application.isPlaying ? visible : true; }
+        set { visible = value; }
     }
 
     private bool lodEnabled = true;
+
     public bool LODEnabled
     {
-        get
-        {
-            return lodEnabled;
-        }
+        get { return lodEnabled; }
         set
         {
             lodEnabled = value;
@@ -103,53 +89,37 @@ public class GPUSkinningPlayer
 
     // 标记动画状态，由外部接口影响
     private bool isPlaying = false;
+
     public bool IsPlaying
     {
-        get
-        {
-            return isPlaying;
-        }
+        get { return isPlaying; }
     }
 
     public string PlayingClipName
     {
-        get
-        {
-            return playingClip == null ? null : playingClip.name;
-        }
+        get { return playingClip == null ? null : playingClip.name; }
     }
-    
+
     public Vector3 Position
     {
-        get
-        {
-            return transform == null ? Vector3.zero : transform.position;
-        }
+        get { return transform == null ? Vector3.zero : transform.position; }
     }
 
     public Vector3 LocalPosition
     {
-        get
-        {
-            return transform == null ? Vector3.zero : transform.localPosition;
-        }
+        get { return transform == null ? Vector3.zero : transform.localPosition; }
     }
 
     private List<GPUSkinningPlayerJoint> joints = null;
+
     public List<GPUSkinningPlayerJoint> Joints
     {
-        get
-        {
-            return joints;
-        }
+        get { return joints; }
     }
 
     public GPUSkinningWrapMode WrapMode
     {
-        get
-        {
-            return playingClip == null ? GPUSkinningWrapMode.Once : playingClip.wrapMode;
-        }
+        get { return playingClip == null ? GPUSkinningWrapMode.Once : playingClip.wrapMode; }
     }
 
     // 是否是当前动画的帧尾
@@ -157,7 +127,7 @@ public class GPUSkinningPlayer
     {
         get
         {
-            if(playingClip == null)
+            if (playingClip == null)
             {
                 return false;
             }
@@ -175,7 +145,7 @@ public class GPUSkinningPlayer
     {
         get
         {
-            if(playingClip == null)
+            if (playingClip == null)
             {
                 return 0;
             }
@@ -186,18 +156,18 @@ public class GPUSkinningPlayer
         }
         set
         {
-            if(playingClip != null)
+            if (playingClip != null)
             {
                 float v = Mathf.Clamp01(value);
-                if(WrapMode == GPUSkinningWrapMode.Once)
+                if (WrapMode == GPUSkinningWrapMode.Once)
                 {
                     this.time = v * playingClip.length;
                 }
-                else if(WrapMode == GPUSkinningWrapMode.Loop)
+                else if (WrapMode == GPUSkinningWrapMode.Loop)
                 {
-                    if(playingClip.individualDifferenceEnabled)
+                    if (playingClip.individualDifferenceEnabled)
                     {
-                        res.Time = playingClip.length +  v * playingClip.length - this.timeDiff;
+                        res.Time = playingClip.length + v * playingClip.length - this.timeDiff;
                     }
                     else
                     {
@@ -223,6 +193,7 @@ public class GPUSkinningPlayer
         {
             mr = go.AddComponent<MeshRenderer>();
         }
+
         mf = go.GetComponent<MeshFilter>();
         if (mf == null)
         {
@@ -247,17 +218,18 @@ public class GPUSkinningPlayer
     {
         GPUSkinningClip[] clips = res.anim.clips;
         int numClips = clips == null ? 0 : clips.Length;
-        for(int i = 0; i < numClips; ++i)
+        for (int i = 0; i < numClips; ++i)
         {
-            if(clips[i].name == clipName)
+            if (clips[i].name == clipName)
             {
-                if (playingClip != clips[i] || 
-                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && IsTimeAtTheEndOfLoop) || 
+                if (playingClip != clips[i] ||
+                    (playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && IsTimeAtTheEndOfLoop) ||
                     (playingClip != null && !isPlaying))
                 {
                     // 当前没有正在播的动画、动画播到帧尾
                     SetNewPlayingClip(clips[i]);
                 }
+
                 return;
             }
         }
@@ -290,8 +262,9 @@ public class GPUSkinningPlayer
                         SetNewPlayingClip(clips[i]);
                         return;
                     }
-                    
-                    if ((playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once && IsTimeAtTheEndOfLoop) ||
+
+                    if ((playingClip != null && playingClip.wrapMode == GPUSkinningWrapMode.Once &&
+                         IsTimeAtTheEndOfLoop) ||
                         (playingClip != null && !isPlaying))
                     {
                         // 当前没有正在播的动画、动画播到帧尾
@@ -302,7 +275,7 @@ public class GPUSkinningPlayer
             }
         }
     }
-    
+
     public void Stop()
     {
         isPlaying = false;
@@ -310,7 +283,7 @@ public class GPUSkinningPlayer
 
     public void Resume()
     {
-        if(playingClip != null)
+        if (playingClip != null)
         {
             isPlaying = true;
         }
@@ -319,12 +292,12 @@ public class GPUSkinningPlayer
     // 设置MeshFilter的Mesh
     public void SetLODMesh(Mesh mesh)
     {
-        if(!LODEnabled)
+        if (!LODEnabled)
         {
             mesh = res.mesh;
         }
 
-        if(mf != null && mf.sharedMesh != mesh)
+        if (mf != null && mf.sharedMesh != mesh)
         {
             mf.sharedMesh = mesh;
         }
@@ -343,11 +316,11 @@ public class GPUSkinningPlayer
     }
 
     #endregion
-    
+
     private void FillEvents(GPUSkinningClip clip, GPUSkinningBetterList<GPUSkinningAnimEvent> events)
     {
         events.Clear();
-        if(clip != null && clip.events != null && clip.events.Length > 0)
+        if (clip != null && clip.events != null && clip.events.Length > 0)
         {
             events.AddRange(clip.events);
         }
@@ -378,22 +351,23 @@ public class GPUSkinningPlayer
         {
             return;
         }
+
         GPUSkinningMaterial currMtrl = GetCurrentMaterial();
-        if(currMtrl == null)
+        if (currMtrl == null)
         {
-            return;    
+            return;
         }
 
-        if(mr.sharedMaterial != currMtrl.material)
+        if (mr.sharedMaterial != currMtrl.material)
         {
             mr.sharedMaterial = currMtrl.material;
         }
-        
+
         if (playingClip.wrapMode == GPUSkinningWrapMode.Loop)
         {
             UpdateMaterial(timeDelta, currMtrl);
         }
-        else if(playingClip.wrapMode == GPUSkinningWrapMode.Once)
+        else if (playingClip.wrapMode == GPUSkinningWrapMode.Once)
         {
             if (time >= playingClip.length)
             {
@@ -405,7 +379,7 @@ public class GPUSkinningPlayer
             {
                 UpdateMaterial(timeDelta, currMtrl);
                 time += timeDelta; // 时间的积累是在更新材质之后，可以保证在资源材质前，动画时间和上一帧一致，从而可以正确驱动 res.Update(deltaTime, currMtrl)
-                if(time > playingClip.length)
+                if (time > playingClip.length)
                 {
                     time = playingClip.length;
                 }
@@ -419,27 +393,36 @@ public class GPUSkinningPlayer
         crossFadeProgress += timeDelta;
         lastPlayedTime += timeDelta;
     }
-    
+
     // 更新贴图
     private void UpdateMaterial(float deltaTime, GPUSkinningMaterial currMtrl)
     {
         // 检测是否有变化需要更新
         int frameIndex = GetFrameIndex();
-        float interpolationFactor = GetInterpolationFactor();
-        if(lastPlayingClip == playingClip && frameIndex == lastPlayingFrameIndex)
+        float time = GetCurrentTime();
+        bool isInBleding = res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress);
+        float interpolationFactor = GetInterpolationFactor(playingClip, time);
+        float lastInterpolationFactor = isInBleding ? GetInterpolationFactor(lastPlayedClip, lastPlayedTime) : 0;
+        // if (interpolationFactor != 0 || lastInterpolationFactor != 0)
+        // {
+        //     Debug.LogFormat("lastInterpolationFactor:{0}, interpolationFactor:{1}", lastInterpolationFactor,
+        //         interpolationFactor);
+        // }
+        if (lastPlayingClip == playingClip && frameIndex == lastPlayingFrameIndex)
         {
-            res.Update(deltaTime, currMtrl, interpolationFactor);
+            res.Update(deltaTime, currMtrl, lastInterpolationFactor, interpolationFactor);
             return;
         }
+
         lastPlayingClip = playingClip;
         lastPlayingFrameIndex = frameIndex;
-        
+
         int nextFrameIndex = GetNextFrameIndex();
         GPUSkinningFrame nextFrame = playingClip.frames[nextFrameIndex]; // 下一帧数据
         GPUSkinningFrame frame = playingClip.frames[frameIndex]; // 当前帧数据
         if (Visible || CullingMode == GPUSKinningCullingMode.AlwaysAnimate)
         {
-            res.Update(deltaTime, currMtrl, interpolationFactor);
+            res.Update(deltaTime, currMtrl, lastInterpolationFactor, interpolationFactor);
             // 设置融合属性
             res.UpdatePlayingData(
                 mpb, playingClip, frameIndex, frame, playingClip.rootMotionEnabled && rootMotionEnabled,
@@ -447,33 +430,33 @@ public class GPUSkinningPlayer
             );
             mr.SetPropertyBlock(mpb); // 应用属性到shader中
 
-            if (res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+            if (isInBleding)
             {
                 int frameIndexCrossFade = GetCrossFadeFrameIndex();
                 int nextIndexCrossFade = GetNextCrossFadeFrameIndex();
                 GPUSkinningFrame frameCrossFade = lastPlayedClip.frames[frameIndexCrossFade];
                 GPUSkinningFrame nextFrameCrossFade = lastPlayedClip.frames[nextIndexCrossFade];
                 float crossFadeBlendFactor = res.GetBlendFactor(crossFadeProgress, crossFadeTime);
-                UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, interpolationFactor, crossFadeBlendFactor);
-                
+                UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, interpolationFactor,
+                    crossFadeBlendFactor);
             }
             else
             {
                 UpdateJoints(frame, nextFrame, interpolationFactor);
             }
         }
-        
+
         // 动画融合，主要用以计算RootMotion，骨骼动画的融合在res.UpdatePlayingData内部判定
         float blend_crossFade = 1;
         int frameIndex_crossFade = -1;
         GPUSkinningFrame frame_crossFade = null;
-        if (res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+        if (isInBleding)
         {
             frameIndex_crossFade = GetCrossFadeFrameIndex(); // 融合帧
             frame_crossFade = lastPlayedClip.frames[frameIndex_crossFade]; // 融合帧的数据
             blend_crossFade = res.GetBlendFactor(crossFadeProgress, crossFadeTime); // 融合比率
         }
-        
+
         // RootMotion
         if (playingClip.rootMotionEnabled && rootMotionEnabled && frameIndex != rootMotionFrameIndex)
         {
@@ -489,7 +472,8 @@ public class GPUSkinningPlayer
         UpdateEvents(playingClip, frameIndex, frame_crossFade == null ? null : lastPlayedClip, frameIndex_crossFade);
     }
 
-    private void UpdateEvents(GPUSkinningClip playingClip, int playingFrameIndex, GPUSkinningClip corssFadeClip, int crossFadeFrameIndex)
+    private void UpdateEvents(GPUSkinningClip playingClip, int playingFrameIndex, GPUSkinningClip corssFadeClip,
+        int crossFadeFrameIndex)
     {
         UpdateClipEvent(playingClip, playingFrameIndex);
         UpdateClipEvent(corssFadeClip, crossFadeFrameIndex);
@@ -497,61 +481,66 @@ public class GPUSkinningPlayer
 
     private void UpdateClipEvent(GPUSkinningClip clip, int frameIndex)
     {
-        if(clip == null || clip.events == null || clip.events.Length == 0)
+        if (clip == null || clip.events == null || clip.events.Length == 0)
         {
             return;
         }
 
         GPUSkinningAnimEvent[] events = clip.events;
         int numEvents = events.Length;
-        for(int i = 0; i < numEvents; ++i)
+        for (int i = 0; i < numEvents; ++i)
         {
-            if(events[i].frameIndex == frameIndex && onAnimEvent != null)
+            if (events[i].frameIndex == frameIndex && onAnimEvent != null)
             {
                 onAnimEvent(this, events[i].eventId);
                 break;
             }
         }
     }
-    
+
     /// <summary>
     /// 获取运动贴图
     /// </summary>
     private GPUSkinningMaterial GetCurrentMaterial()
     {
-        if(res == null)
+        if (res == null)
         {
             return null;
         }
 
-        if(playingClip == null)
+        if (playingClip == null)
         {
             // 默认RootOff_BlendOff状态
             return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOff);
         }
+
         // rootMotion 需要脚本和动画资源都支持
-        if(playingClip.rootMotionEnabled && rootMotionEnabled)
+        if (playingClip.rootMotionEnabled && rootMotionEnabled)
         {
-            if(res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+            if (res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
             {
-                if(lastPlayedClip.rootMotionEnabled)
+                if (lastPlayedClip.rootMotionEnabled)
                 {
                     // 当前动画片段和Mono的RootMotion都开启，可以动画融合，旧动画片段的RootMotion开启
                     return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOn_BlendOn_CrossFadeRootOn);
                 }
+
                 // 当前动画片段和Mono的RootMotion都开启，可以动画融合，旧动画片段的RootMotion关闭
                 return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOn_BlendOn_CrossFadeRootOff);
             }
+
             // 当前动画片段和Mono的RootMotion都开启，不可以动画融合
             return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOn_BlendOff);
         }
-        if(res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
+
+        if (res.IsCrossFadeBlending(lastPlayedClip, crossFadeTime, crossFadeProgress))
         {
             if (lastPlayedClip.rootMotionEnabled)
             {
                 // 当前动画片段和Mono的RootMotion都关闭，可以动画融合，旧动画片段的RootMotion开启
                 return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOn_CrossFadeRootOn);
             }
+
             // 当前动画片段和Mono的RootMotion都关闭，可以动画融合，旧动画片段的RootMotion关闭
             return res.GetMaterial(GPUSkinningPlayerResources.MaterialState.RootOff_BlendOn_CrossFadeRootOff);
         }
@@ -565,11 +554,11 @@ public class GPUSkinningPlayer
     // 根节点运动
     private void DoRootMotion(GPUSkinningFrame frame, float blend, bool doRotate)
     {
-        if(frame == null)
+        if (frame == null)
         {
             return;
         }
-        
+
         Quaternion deltaRotation = frame.rootMotionDeltaPositionQ;
         Vector3 newForward = deltaRotation * transform.forward;
         Vector3 deltaPosition = newForward * frame.rootMotionDeltaPositionL * blend;
@@ -589,7 +578,7 @@ public class GPUSkinningPlayer
         float time = 0;
         if (WrapMode == GPUSkinningWrapMode.Once)
         {
-            time = this.time; 
+            time = this.time;
         }
         else if (WrapMode == GPUSkinningWrapMode.Loop)
         {
@@ -599,9 +588,11 @@ public class GPUSkinningPlayer
         {
             throw new System.NotImplementedException();
         }
+
         return time;
     }
-    
+
+
     // 获取当前动画的帧索引
     private int GetFrameIndex()
     {
@@ -628,6 +619,7 @@ public class GPUSkinningPlayer
         {
             frameIndex = frameIndex + 1;
         }
+
         return frameIndex;
     }
 
@@ -642,7 +634,7 @@ public class GPUSkinningPlayer
         //冻结过渡
         if (lastPlayedClip.wrapMode == GPUSkinningWrapMode.Once)
         {
-            if (lastPlayedTime >= lastPlayedClip.length)
+            if (Mathf.Approximately(lastPlayedTime, lastPlayedClip.length))
             {
                 // 单次播放，动画播完，返回最后一帧
                 return GetTheLastFrameIndex_WrapMode_Once(lastPlayedClip);
@@ -671,12 +663,13 @@ public class GPUSkinningPlayer
         {
             return -1;
         }
-        
+
         int frameIndex = GetCrossFadeFrameIndex();
         if (frameIndex != (int)(lastPlayedClip.length * lastPlayedClip.fps) - 1)
         {
             frameIndex = frameIndex + 1;
         }
+
         return frameIndex;
     }
 
@@ -701,41 +694,43 @@ public class GPUSkinningPlayer
     /// 获取插帧融合因子
     /// </summary>
     /// <returns></returns>
-    private float GetInterpolationFactor()
+    private float GetInterpolationFactor(GPUSkinningClip clip, float time)
     {
-        float time = GetCurrentTime();
         float interpolationFactor = 0.0f;
-        if (Mathf.Approximately(playingClip.length,time))
+        if (clip == null)
         {
-            // 尾帧不需要插帧
             return interpolationFactor;
         }
-        else
+
+        if ((clip.wrapMode == GPUSkinningWrapMode.Once && clip.length >= time) || clip.wrapMode == GPUSkinningWrapMode.Loop)
         {
-            if (IsFrameTail(time))
+            if (IsFrameTail(time, clip))
             {
                 return interpolationFactor;
             }
 
-            interpolationFactor = (time * playingClip.fps) % (playingClip.length * playingClip.fps);
-            return interpolationFactor - (int)interpolationFactor;
+            interpolationFactor = (time * clip.fps) % (clip.length * clip.fps);
+            interpolationFactor = interpolationFactor - (int)interpolationFactor;
         }
+        
+        return interpolationFactor;
     }
 
     // 是否是尾帧
-    private bool IsFrameTail(float time)
+    private bool IsFrameTail(float time, GPUSkinningClip clip)
     {
-        if (playingClip == null)
+        if (clip == null)
         {
             return false;
         }
 
-        int frameIndex = GetFrameIndex_WrapMode_Loop(playingClip, time);
-        int frameTailIndex = (int)(playingClip.length * playingClip.fps) - 1;
+        int frameIndex = GetFrameIndex_WrapMode_Loop(clip, time);
+        int frameTailIndex = (int)(clip.length * clip.fps) - 1;
         if (frameIndex == frameTailIndex)
         {
             return true;
         }
+
         return false;
     }
 
@@ -745,11 +740,13 @@ public class GPUSkinningPlayer
 
     private Vector4 posCache = new Vector4();
     private Vector4 posCacheNext = new Vector4();
+
     private Vector3 scaleCache = new Vector3();
+
     // 更新挂点位置，间隔帧融合
     private void UpdateJoints(GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float interpolationFactor)
     {
-        if(joints == null)
+        if (joints == null)
         {
             return;
         }
@@ -757,7 +754,7 @@ public class GPUSkinningPlayer
         Matrix4x4[] matrices = frame.matrices;
         Matrix4x4[] nextMatrices = nextFrame.matrices;
         int numJoints = joints.Count;
-        for(int i = 0; i < numJoints; ++i)
+        for (int i = 0; i < numJoints; ++i)
         {
             GPUSkinningPlayerJoint joint = joints[i];
             if (joint == null)
@@ -770,12 +767,15 @@ public class GPUSkinningPlayer
             {
                 Matrix4x4 jointMatrix = matrices[joint.BoneIndex];
                 Matrix4x4 nextJointMatrix = nextMatrices[joint.BoneIndex];
-                
+
                 // TODO 处理RootMotion的插帧
-                if(playingClip.rootMotionEnabled && rootMotionEnabled)
+                if (playingClip.rootMotionEnabled && rootMotionEnabled)
                 {
-                    jointMatrix = frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) * jointMatrix;
+                    jointMatrix =
+                        frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) *
+                        jointMatrix;
                 }
+
                 // MultiplyVector：只关心方向和缩放，MultiplyPoint：适用于完整的变换
                 // 对于骨骼本身而言，并不需要考虑绑定矩阵
                 Quaternion rotation = GPUSkinningUtil.ToQuaternion(jointMatrix); // 提取旋转相关的4元数
@@ -785,7 +785,7 @@ public class GPUSkinningPlayer
                 posCache.y = pos.y;
                 posCache.z = pos.z;
                 posCache.w = Mathf.Clamp01(scale.x); // 只考虑同轴缩放
-                
+
                 Quaternion rotationNext = GPUSkinningUtil.ToQuaternion(nextJointMatrix); // 提取旋转相关的4元数
                 Vector3 scaleNext = nextJointMatrix.lossyScale;
                 var posNext = nextJointMatrix.GetColumn(3);
@@ -793,7 +793,7 @@ public class GPUSkinningPlayer
                 posCacheNext.y = posNext.y;
                 posCacheNext.z = posNext.z;
                 posCacheNext.w = Mathf.Clamp01(scaleNext.x);
-                
+
                 pos = Vector4.Lerp(posCache, posCacheNext, interpolationFactor);
                 rotation = Quaternion.Slerp(rotation, rotationNext, interpolationFactor);
 
@@ -819,9 +819,12 @@ public class GPUSkinningPlayer
 
     private Vector4 crossPosCache = new Vector4();
     private Vector4 nextCrossPosCache = new Vector4();
-    private void UpdateJointsCrossFade(GPUSkinningFrame frameCrossFade, GPUSkinningFrame nextFrameCrossFade,  GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float interpolationFactor, float crossFadeBlendFactorGPUSkinningFrame)
+
+    private void UpdateJointsCrossFade(GPUSkinningFrame frameCrossFade, GPUSkinningFrame nextFrameCrossFade,
+        GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float interpolationFactor,
+        float crossFadeBlendFactorGPUSkinningFrame)
     {
-        if(joints == null)
+        if (joints == null)
         {
             return;
         }
@@ -829,9 +832,9 @@ public class GPUSkinningPlayer
         Matrix4x4[] matrices = frame.matrices;
         Matrix4x4[] nextMatrices = nextFrame.matrices;
         Matrix4x4[] crossMatrices = frameCrossFade.matrices;
-        Matrix4x4[] nextCrossMatrices= nextFrameCrossFade.matrices;
+        Matrix4x4[] nextCrossMatrices = nextFrameCrossFade.matrices;
         int numJoints = joints.Count;
-        for(int i = 0; i < numJoints; ++i)
+        for (int i = 0; i < numJoints; ++i)
         {
             GPUSkinningPlayerJoint joint = joints[i];
             Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
@@ -841,12 +844,15 @@ public class GPUSkinningPlayer
                 Matrix4x4 nextJointMatrix = nextMatrices[joint.BoneIndex];
                 Matrix4x4 crossJointMatrix = crossMatrices[joint.BoneIndex];
                 Matrix4x4 nextCrossJointMatrix = nextCrossMatrices[joint.BoneIndex];
-                
+
                 // TODO 处理RootMotion的插帧
-                if(playingClip.rootMotionEnabled && rootMotionEnabled)
+                if (playingClip.rootMotionEnabled && rootMotionEnabled)
                 {
-                    jointMatrix = frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) * jointMatrix;
+                    jointMatrix =
+                        frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) *
+                        jointMatrix;
                 }
+
                 // MultiplyVector：只关心方向和缩放，MultiplyPoint：适用于完整的变换
                 // 对于骨骼本身而言，并不需要考虑绑定矩阵
                 Quaternion rotation = GPUSkinningUtil.ToQuaternion(jointMatrix); // 提取旋转相关的4元数
@@ -856,7 +862,7 @@ public class GPUSkinningPlayer
                 posCache.y = pos.y;
                 posCache.z = pos.z;
                 posCache.w = Mathf.Clamp01(scale.x); // 只考虑同轴缩放
-                
+
                 Quaternion rotationNext = GPUSkinningUtil.ToQuaternion(nextJointMatrix); // 提取旋转相关的4元数
                 Vector3 scaleNext = nextJointMatrix.lossyScale;
                 var posNext = nextJointMatrix.GetColumn(3);
@@ -866,7 +872,7 @@ public class GPUSkinningPlayer
                 posCacheNext.w = Mathf.Clamp01(scaleNext.x);
                 pos = Vector4.Lerp(posCache, posCacheNext, interpolationFactor);
                 rotation = Quaternion.Slerp(rotation, rotationNext, interpolationFactor);
-                
+
                 Quaternion crossRotation = GPUSkinningUtil.ToQuaternion(crossJointMatrix); // 提取旋转相关的4元数
                 Vector3 crossScale = crossJointMatrix.lossyScale;
                 var crossPos = crossJointMatrix.GetColumn(3);
@@ -874,7 +880,7 @@ public class GPUSkinningPlayer
                 crossPosCache.y = crossPos.y;
                 crossPosCache.z = crossPos.z;
                 crossPosCache.w = Mathf.Clamp01(crossScale.x); // 只考虑同轴缩放
-                
+
                 Quaternion nextCrossRotation = GPUSkinningUtil.ToQuaternion(nextCrossJointMatrix); // 提取旋转相关的4元数
                 Vector3 nextCrossScale = nextCrossJointMatrix.lossyScale;
                 var nextCrossPos = nextCrossJointMatrix.GetColumn(3);
@@ -887,7 +893,7 @@ public class GPUSkinningPlayer
 
                 pos = Vector4.Lerp(crossPos, pos, crossFadeBlendFactorGPUSkinningFrame);
                 rotation = Quaternion.Slerp(crossRotation, rotation, crossFadeBlendFactorGPUSkinningFrame);
-                
+
                 jointTransform.localPosition = pos;
                 jointTransform.localRotation = rotation;
                 scaleCache.x = pos.w;
@@ -925,8 +931,9 @@ public class GPUSkinningPlayer
                     }
                 }
             }
+
             existingJoints = existingJointsList.ToArray();
-            
+
             // 遍历骨骼数据
             GPUSkinningBone[] bones = res.anim.bones;
             int numBones = bones == null ? 0 : bones.Length;
@@ -947,13 +954,14 @@ public class GPUSkinningPlayer
                     {
                         for (int j = 0; j < existingJoints.Length; ++j)
                         {
-                            if(existingJoints[j] != null && existingJoints[j].BoneGUID == bone.guid)
+                            if (existingJoints[j] != null && existingJoints[j].BoneGUID == bone.guid)
                             {
                                 if (existingJoints[j].BoneIndex != i)
                                 {
                                     existingJoints[j].Init(i, bone.guid);
                                     GPUSkinningUtil.MarkAllScenesDirty();
                                 }
+
                                 joints.Add(existingJoints[j]);
                                 existingJoints[j] = null;
                                 inTheExistingJoints = true;
@@ -963,7 +971,7 @@ public class GPUSkinningPlayer
                     }
 
                     // 挂点不存在就创建挂点
-                    if(!inTheExistingJoints)
+                    if (!inTheExistingJoints)
                     {
                         GameObject jointGo = new GameObject(bone.name);
                         jointGo.transform.parent = go.transform;
@@ -982,7 +990,7 @@ public class GPUSkinningPlayer
             {
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.CallbackFunction DelayCall = null;
-                DelayCall = () => 
+                DelayCall = () =>
                 {
                     UnityEditor.EditorApplication.delayCall -= DelayCall;
                     DeleteInvalidJoints(existingJoints);
@@ -1013,12 +1021,13 @@ public class GPUSkinningPlayer
                         child.parent = go.transform;
                         child.localPosition = Vector3.zero;
                     }
+
                     Object.DestroyImmediate(joints[i].transform.gameObject);
                     GPUSkinningUtil.MarkAllScenesDirty();
                 }
             }
         }
     }
-    
+
     #endregion
 }

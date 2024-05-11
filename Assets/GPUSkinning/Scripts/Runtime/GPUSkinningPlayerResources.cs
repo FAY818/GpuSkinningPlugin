@@ -70,9 +70,9 @@ public class GPUSkinningPlayerResources
     // 设置矩阵绑定贴图
     private static int shaderPropID_GPUSkinning_TextureBindMatrix = -1;
     // 贴图的尺寸信息
-    private static int shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor = 0;
+    private static int shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame = 0;
     // 矩阵绑定贴图的尺寸信息
-    private static int shaderPropID_GPUSkinning_BindTextureSize = 0;
+    private static int shaderPropID_GPUSkinning_BindTextureSize_interpolationFactor = 0;
     // 设置采样帧率和动画间的纹素间隔
     private static int shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation = 0;
     // 当前RootMotion的BindPose的逆矩阵
@@ -88,8 +88,8 @@ public class GPUSkinningPlayerResources
         {
             shaderPropID_GPUSkinning_TextureBindMatrix = Shader.PropertyToID("_GPUSkinning_TextureBindMatrix");
             shaderPropID_GPUSkinning_TextureMatrix = Shader.PropertyToID("_GPUSkinning_TextureMatrix");
-            shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor = Shader.PropertyToID("_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor");
-            shaderPropID_GPUSkinning_BindTextureSize = Shader.PropertyToID("_GPUSkinning_BindTextureSize");
+            shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame = Shader.PropertyToID("_GPUSkinning_TextureSize_NumPixelsPerFrame");
+            shaderPropID_GPUSkinning_BindTextureSize_interpolationFactor = Shader.PropertyToID("_GPUSkinning_BindTextureSize_interpolationFactor");
             shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation = Shader.PropertyToID("_GPUSkinning_FrameIndex_PixelSegmentation");
             shaderPropID_GPUSkinning_RootMotion = Shader.PropertyToID("_GPUSkinning_RootMotion");
             shaderPorpID_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade = Shader.PropertyToID("_GPUSkinning_FrameIndex_PixelSegmentation_Blend_CrossFade");
@@ -241,7 +241,7 @@ public class GPUSkinningPlayerResources
     }
 
     // 更新贴图的信息，传递给Shader
-    public void Update(float deltaTime, GPUSkinningMaterial mtrl, float interpolationFactor)
+    public void Update(float deltaTime, GPUSkinningMaterial mtrl, float lastInterpolationFactor, float interpolationFactor)
     {
         // 这里需要传递帧融合因子
         if (executeOncePerFrame.CanBeExecute())
@@ -256,9 +256,9 @@ public class GPUSkinningPlayerResources
             mtrl.executeOncePerFrame.MarkAsExecuted();
             mtrl.material.SetTexture(shaderPropID_GPUSkinning_TextureMatrix, texture);
             mtrl.material.SetTexture(shaderPropID_GPUSkinning_TextureBindMatrix, textureBind);
-            mtrl.material.SetVector(shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame_interpolationFactor, 
-                new Vector4(anim.textureWidth, anim.textureHeight, anim.skinningBoneNum * 2, interpolationFactor));
-            mtrl.material.SetVector(shaderPropID_GPUSkinning_BindTextureSize, new Vector4(anim.bindTextureWidth, anim.bindTextureHeight));
+            mtrl.material.SetVector(shaderPropID_GPUSkinning_TextureSize_NumPixelsPerFrame, 
+                new Vector4(anim.textureWidth, anim.textureHeight, anim.skinningBoneNum * 2, 0));
+            mtrl.material.SetVector(shaderPropID_GPUSkinning_BindTextureSize_interpolationFactor, new Vector4(anim.bindTextureWidth, anim.bindTextureHeight, lastInterpolationFactor, interpolationFactor));
             
         }
     }
