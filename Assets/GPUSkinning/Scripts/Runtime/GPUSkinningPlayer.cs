@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -437,7 +436,7 @@ public class GPUSkinningPlayer
                 GPUSkinningFrame frameCrossFade = lastPlayedClip.frames[frameIndexCrossFade];
                 GPUSkinningFrame nextFrameCrossFade = lastPlayedClip.frames[nextIndexCrossFade];
                 float crossFadeBlendFactor = res.GetBlendFactor(crossFadeProgress, crossFadeTime);
-                UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, interpolationFactor,
+                UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, lastInterpolationFactor, interpolationFactor,
                     crossFadeBlendFactor);
             }
             else
@@ -821,7 +820,7 @@ public class GPUSkinningPlayer
     private Vector4 nextCrossPosCache = new Vector4();
 
     private void UpdateJointsCrossFade(GPUSkinningFrame frameCrossFade, GPUSkinningFrame nextFrameCrossFade,
-        GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float interpolationFactor,
+        GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float lastInterpolationFactor, float InterpolationFactor, 
         float crossFadeBlendFactorGPUSkinningFrame)
     {
         if (joints == null)
@@ -870,8 +869,8 @@ public class GPUSkinningPlayer
                 posCacheNext.y = posNext.y;
                 posCacheNext.z = posNext.z;
                 posCacheNext.w = Mathf.Clamp01(scaleNext.x);
-                pos = Vector4.Lerp(posCache, posCacheNext, interpolationFactor);
-                rotation = Quaternion.Slerp(rotation, rotationNext, interpolationFactor);
+                pos = Vector4.Lerp(posCache, posCacheNext, InterpolationFactor);
+                rotation = Quaternion.Slerp(rotation, rotationNext, InterpolationFactor);
 
                 Quaternion crossRotation = GPUSkinningUtil.ToQuaternion(crossJointMatrix); // 提取旋转相关的4元数
                 Vector3 crossScale = crossJointMatrix.lossyScale;
@@ -888,8 +887,8 @@ public class GPUSkinningPlayer
                 nextCrossPosCache.y = nextCrossPos.y;
                 nextCrossPosCache.z = nextCrossPos.z;
                 nextCrossPosCache.w = Mathf.Clamp01(nextCrossScale.x);
-                crossPos = Vector4.Lerp(crossPosCache, nextCrossPosCache, interpolationFactor);
-                crossRotation = Quaternion.Slerp(crossRotation, nextCrossRotation, interpolationFactor);
+                crossPos = Vector4.Lerp(crossPosCache, nextCrossPosCache, lastInterpolationFactor);
+                crossRotation = Quaternion.Slerp(crossRotation, nextCrossRotation, lastInterpolationFactor);
 
                 pos = Vector4.Lerp(crossPos, pos, crossFadeBlendFactorGPUSkinningFrame);
                 rotation = Quaternion.Slerp(crossRotation, rotation, crossFadeBlendFactorGPUSkinningFrame);
