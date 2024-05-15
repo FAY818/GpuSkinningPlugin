@@ -41,12 +41,12 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets/GPUSkinning/Scripts/Utils/GPUSkinningUtil.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/SerializableData/GPUSkinningFrame.cs" />
      <Compile Include="Assets/Scripts/AnimPlayer.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningPlayer.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Enum/GPUSkinningQuality.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/SerializableData/GPUSkinningClip.cs" />
+     <Compile Include="Assets/GPUSkinning/Scripts/Utils/GPUSkinningUtil.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Enum/GPUSkinningWrapMode.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningPlayerJoint.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningPlayerMonoManager.cs" />

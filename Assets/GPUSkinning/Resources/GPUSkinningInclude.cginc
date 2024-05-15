@@ -129,21 +129,27 @@ inline float4 NormalLerp(float4 q1, float4 q2, float t)
 	normalize(q1 * (1 - t) + q2 * t);
 }
 
-inline float4x4 getBindMatrix(float boneIndex)
+inline int getParentBoneIndex(int boneIndex)
+{
+	int bindMatStartIndex = boneIndex * 3;
+	float4 uv = bindIndexToUV(bindMatStartIndex + 2);
+	float4 parentBoneIndex = tex2Dlod(_GPUSkinning_TextureBindMatrix, uv);
+	return parentBoneIndex.x;
+}
+
+inline float4x4 getBindMatrix(int boneIndex)
 {
 	int bindMatStartIndex = boneIndex * 3;
 	float4 uv1 = bindIndexToUV(bindMatStartIndex);
 	float4 uv2 = bindIndexToUV(bindMatStartIndex + 1);
-	float4 uv3 = bindIndexToUV(bindMatStartIndex + 2);
 	float4 dualBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, uv1);
 	float4 realBind = tex2Dlod(_GPUSkinning_TextureBindMatrix, uv2);
-	float4 parentBoneIndex = tex2Dlod(_GPUSkinning_TextureBindMatrix, uv3);
 	float4x4 bindMat = DualQuaternionToMatrix(dualBind, realBind);
 	return  bindMat;
 }
 
 // 获取骨骼矩阵的旋转四元数
-inline float4 getDual(float startIndex, float boneIndex)
+inline float4 getDual(float startIndex, int boneIndex)
 {
 	float matStartIndex = startIndex + boneIndex * 2;
 	float4 uv = indexToUV(matStartIndex);
@@ -152,7 +158,7 @@ inline float4 getDual(float startIndex, float boneIndex)
 }
 
 // 获取骨骼矩阵的移动缩放四元数
-inline float4 getReal(float startIndex, float boneIndex)
+inline float4 getReal(float startIndex, int boneIndex)
 {
 	float matStartIndex = startIndex + boneIndex * 2;
 	float4 uv = indexToUV(matStartIndex + 1);
@@ -161,7 +167,8 @@ inline float4 getReal(float startIndex, float boneIndex)
 }
 
 // 获取帧插值骨骼矩阵的旋转四元数
-inline float4 getInterpolationDual(float curFrameIndex, float nextFrameIndex, float boneIndex, bool isLast)
+// isLast 是否是前一个动画，前后两个动画的插值因子是不同的，如果不存在动画混合，就默认false
+inline float4 getInterpolationDual(float curFrameIndex, float nextFrameIndex, int boneIndex, bool isLast)
 {
 	float frameInterpFactor;
 	if(isLast)
@@ -180,7 +187,7 @@ inline float4 getInterpolationDual(float curFrameIndex, float nextFrameIndex, fl
 }
 
 // 获取帧插值骨骼矩阵的移动缩放四元数
-inline float4 getInterpolationReal(float curFrameIndex, float nextFrameIndex, float boneIndex, bool isLast)
+inline float4 getInterpolationReal(float curFrameIndex, float nextFrameIndex, int boneIndex, bool isLast)
 {
 	float frameInterpFactor;
 	if(isLast)
@@ -197,38 +204,132 @@ inline float4 getInterpolationReal(float curFrameIndex, float nextFrameIndex, fl
 	return real;
 }
 
+// 获取矩阵调色板
+inline float4x4 getMatrixPalette(float frameStartIndex, float nextFrameStartIndex, int boneIndex)
+{
+	int curBoneIndex = boneIndex;
+	// 局部空间坐标插值
+	float4 dual = getInterpolationDual(frameStartIndex, nextFrameStartIndex, curBoneIndex, false);
+	float4 real = getInterpolationReal(frameStartIndex, nextFrameStartIndex, curBoneIndex, false);
+	float4x4 curMat = DualQuaternionToMatrix(dual, real);
+	float4x4 matrixPalette = curMat;
+	float parentBoneIndex;
+
+	int loopCount = 0;
+	while (true)
+	{
+		loopCount++;
+		if(loopCount > 50) // 防止出现死循环
+		{
+			break;
+		}
+		
+		parentBoneIndex = getParentBoneIndex(curBoneIndex);
+		if(parentBoneIndex == -1)
+		{
+			break;
+		} 
+		else
+		{
+			curBoneIndex = parentBoneIndex;
+		}
+		dual = getInterpolationDual(frameStartIndex, nextFrameStartIndex, curBoneIndex, false);
+		real = getInterpolationReal(frameStartIndex, nextFrameStartIndex, curBoneIndex, false);
+		curMat = DualQuaternionToMatrix(dual, real);
+		matrixPalette = mul(curMat, matrixPalette);
+	}
+	
+	return  matrixPalette;
+}
+
 //获取补帧的变换矩阵信息
-inline float4x4 getMatrix(float frameStartIndex, float nextFrameStartIndex, float boneIndex)
+inline float4x4 getMatrix(float frameStartIndex, float nextFrameStartIndex, int boneIndex)
 {
 	float4x4 bindMat = getBindMatrix(boneIndex);
-	float4 dual = getInterpolationDual(frameStartIndex, nextFrameStartIndex, boneIndex, true);
-	float4 real = getInterpolationReal(frameStartIndex, nextFrameStartIndex, boneIndex, false);
-    float4x4 curMat = DualQuaternionToMatrix(dual, real);
-	float4x4 mat = mul(curMat, bindMat);
+	float4x4 matrixPalette = getMatrixPalette(frameStartIndex, nextFrameStartIndex, boneIndex);
+	float4x4 mat = mul(matrixPalette, bindMat);
     return mat;
 }
 
-//获取融合矩阵
-inline float4x4 getCrossFadeMatrix(float startIndexA, float nextStartIndexA, float startIndexB, float nextStartIndexB, float boneIndex, float crossFadeBlend)
+// 获取融合矩阵调色板，在每个局部姿势里融合
+inline float4x4 getCrossFadeMatrixPalette(float startIndexA, float nextStartIndexA, float startIndexB, float nextStartIndexB, int boneIndex, float crossFadeBlend)
 {
-	float4x4 bindMat = getBindMatrix(boneIndex);
+	int curBoneIndex = boneIndex;
+	// 局部空间坐标插值
 	int curFrameIndexA = startIndexA;
 	int nextFrameIndexA = nextStartIndexA;
-	float4 dualA = getInterpolationDual(curFrameIndexA, nextFrameIndexA, boneIndex, true);
-	float4 realA = getInterpolationReal(curFrameIndexA, nextFrameIndexA, boneIndex, true);
-	
+	float4 dualA = getInterpolationDual(curFrameIndexA, nextFrameIndexA, curBoneIndex, true);
+	float4 realA = getInterpolationReal(curFrameIndexA, nextFrameIndexA, curBoneIndex, true);
+
 	int curFrameIndexB = startIndexB;
 	int nextFrameIndexB = nextStartIndexB;
-	float4 dualB = getInterpolationDual(curFrameIndexB, nextFrameIndexB, boneIndex, false);
-	float4 realB = getInterpolationReal(curFrameIndexB, nextFrameIndexB, boneIndex, false);
-	
+	float4 dualB = getInterpolationDual(curFrameIndexB, nextFrameIndexB, curBoneIndex, true);
+	float4 realB = getInterpolationReal(curFrameIndexB, nextFrameIndexB, curBoneIndex, true);
+
 	// 融合插帧
 	float4 dual = Slerp(dualA, dualB, crossFadeBlend);
 	float4 real = lerp(realA, realB, crossFadeBlend);
 	
-	float4x4 mat = DualQuaternionToMatrix(dual, real);
+	float4x4 curMat = DualQuaternionToMatrix(dual, real);
+	float4x4 matrixPalette = curMat;
+	float parentBoneIndex;
 
-	mat = mul(mat, bindMat);
+	int loopCount = 0;
+	while (true)
+	{
+		loopCount++;
+		if(loopCount > 50) // 防止出现死循环
+			{
+			break;
+			}
+		
+		parentBoneIndex = getParentBoneIndex(curBoneIndex);
+		if(parentBoneIndex == -1)
+		{
+			break;
+		} 
+		else
+		{
+			curBoneIndex = parentBoneIndex;
+		}
+		float4 dualA = getInterpolationDual(curFrameIndexA, nextFrameIndexA, curBoneIndex, true);
+		float4 realA = getInterpolationReal(curFrameIndexA, nextFrameIndexA, curBoneIndex, true);
+		
+		float4 dualB = getInterpolationDual(curFrameIndexB, nextFrameIndexB, curBoneIndex, true);
+		float4 realB = getInterpolationReal(curFrameIndexB, nextFrameIndexB, curBoneIndex, true);
+
+		// 融合插帧
+		float4 dual = Slerp(dualA, dualB, crossFadeBlend);
+		float4 real = lerp(realA, realB, crossFadeBlend);
+	
+		float4x4 curMat = DualQuaternionToMatrix(dual, real);
+		matrixPalette = mul(curMat, matrixPalette);
+	}
+	return  matrixPalette;
+}
+
+//获取融合矩阵
+inline float4x4 getCrossFadeMatrix(float startIndexA, float nextStartIndexA, float startIndexB, float nextStartIndexB, int boneIndex, float crossFadeBlend)
+{
+	float4x4 bindMat = getBindMatrix(boneIndex);
+	// int curFrameIndexA = startIndexA;
+	// int nextFrameIndexA = nextStartIndexA;
+	// float4 dualA = getInterpolationDual(curFrameIndexA, nextFrameIndexA, boneIndex, true);
+	// float4 realA = getInterpolationReal(curFrameIndexA, nextFrameIndexA, boneIndex, true);
+	//
+	// int curFrameIndexB = startIndexB;
+	// int nextFrameIndexB = nextStartIndexB;
+	// float4 dualB = getInterpolationDual(curFrameIndexB, nextFrameIndexB, boneIndex, false);
+	// float4 realB = getInterpolationReal(curFrameIndexB, nextFrameIndexB, boneIndex, false);
+	//
+	// // 融合插帧
+	// float4 dual = Slerp(dualA, dualB, crossFadeBlend);
+	// float4 real = lerp(realA, realB, crossFadeBlend);
+	//
+	// float4x4 mat = DualQuaternionToMatrix(dual, real);
+
+	float4x4 matrixPalette = getCrossFadeMatrixPalette(startIndexA, nextStartIndexA, startIndexB, nextStartIndexB, boneIndex, crossFadeBlend);
+	float4x4 mat = mul(matrixPalette, bindMat);
 	return mat;
 }
 

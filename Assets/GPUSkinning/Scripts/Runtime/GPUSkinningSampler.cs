@@ -6,6 +6,7 @@ using System.Net.Mime;
 using System.Text.RegularExpressions;
 using Unity.VisualScripting;
 #if UNITY_EDITOR
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEditor;
 #endif
 
@@ -80,7 +81,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-	public Transform rootBoneTransform = null;
+	public Transform rootBoneTransform = null; // 此关节点是骨骼和挂点的Root，只收集从此点开始的位移信息；
 
     [HideInInspector]
     [SerializeField]
@@ -148,8 +149,8 @@ public class GPUSkinningSampler : MonoBehaviour
     private void Awake()
 	{
         // 确定动画机制是Animation/Animator
-        animation = GetComponent<Animation>();
-		animator = GetComponent<Animator>();
+        animation = GetComponentInChildren<Animation>();
+		animator = GetComponentInChildren<Animator>();
         if (animator == null && animation == null)
         {
             DestroyImmediate(this);
@@ -178,7 +179,7 @@ public class GPUSkinningSampler : MonoBehaviour
             }
             runtimeAnimatorController = animator.runtimeAnimatorController;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate; // 对象处于摄像机视锥体之外，或者处于非活动状态，持续更新动画状态并计算动画
-            InitTransform();
+            //InitTransform();
             return;
         }
         if(animation != null)
@@ -186,7 +187,7 @@ public class GPUSkinningSampler : MonoBehaviour
             MappingAnimationClips();
             animation.Stop();
             animation.cullingType = AnimationCullingType.AlwaysAnimate;
-            InitTransform();
+            //InitTransform();
             return;
         }
 	}
@@ -269,7 +270,7 @@ public class GPUSkinningSampler : MonoBehaviour
                         string textureRawBindDataFileName = "GPUSKinning_TextureBind_" + animName + ".bytes";
                         CreatePrefab(dir, prefabFileName, dataFileName, meshFileName, mtrlFileName, textureRawDataFileName, textureRawBindDataFileName);
                     }
-                    ClearSkinningBones();
+                    //ClearSkinningBones();
                     anim = gpuSkinningAnimation;
                     AssetDatabase.Refresh();
 					AssetDatabase.SaveAssets();
@@ -385,8 +386,7 @@ public class GPUSkinningSampler : MonoBehaviour
             isSampling = false;
             return;
         }
-
-		smr = GetComponentInChildren<SkinnedMeshRenderer>(); // 从这里看出此插件只支持处理单个SkinnedMeshRenderer
+        smr = GetComponentInChildren<SkinnedMeshRenderer>(); // 从这里看出此插件只支持处理单个SkinnedMeshRenderer
 		if(smr == null)
 		{
 			ShowDialog("Cannot find SkinnedMeshRenderer.");
@@ -423,7 +423,7 @@ public class GPUSkinningSampler : MonoBehaviour
         if (anim != null) 
 	        RestoreCustomBoneData(anim.bones, newBones); // 骨骼暴露导出信息
         gpuSkinningAnimation.bones = newBones;
-        gpuSkinningAnimation.skinningBones = CollectSkinningBones(newBones);
+        gpuSkinningAnimation.skinningBones = CollectSkinningBones(newBones, smr.bones);
         gpuSkinningAnimation.skinningBoneNum = gpuSkinningAnimation.skinningBones.Length;
         gpuSkinningAnimation.rootBoneIndex = 0;
 
@@ -523,7 +523,7 @@ public class GPUSkinningSampler : MonoBehaviour
 	    }
 	    
 	    List<AnimationClip> newClips = null;
-	    AnimationClip[] clips = AnimationUtility.GetAnimationClips(gameObject);
+	    AnimationClip[] clips = AnimationUtility.GetAnimationClips(animation.transform.gameObject);
 	    if (clips != null)
 	    {
 		    for (int i = 0; i < clips.Length; ++i)
@@ -612,7 +612,8 @@ public class GPUSkinningSampler : MonoBehaviour
         for (int i = 0; i < numBones; ++i)
         {
 	        currentBone = bones[i];
-	        frame.matrices[i] = currentBone.transform.localToWorldMatrix;
+	        Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
+	        frame.matrices[i] = mat;
         }
         
         // 处理根节点的变换
@@ -691,9 +692,8 @@ public class GPUSkinningSampler : MonoBehaviour
 			GPUSkinningBone bone1 = GetBoneByTransform(smrBones[weights[1].index]);
 			GPUSkinningBone bone2 = GetBoneByTransform(smrBones[weights[2].index]);
 			GPUSkinningBone bone3 = GetBoneByTransform(smrBones[weights[3].index]);
-
 			
-            Vector4 skinData_01 = new Vector4();
+			Vector4 skinData_01 = new Vector4();
 			skinData_01.x = GetBoneIndex(bone0); // 索引（序列化数据中的索引）
 			skinData_01.y = weights[0].weight; // 权重
 			skinData_01.z = GetBoneIndex(bone1);
@@ -809,6 +809,7 @@ public class GPUSkinningSampler : MonoBehaviour
 	    int indexOfSmrBones = System.Array.IndexOf(bones_smr, currentBoneTransform); // 获取当前骨骼的索引
 	    currentBone.transform = currentBoneTransform;
 	    currentBone.name = currentBone.transform.gameObject.name;
+
 	    if (indexOfSmrBones == -1)
 	    {
 		    currentBone.bindpose = Matrix4x4.identity;
@@ -819,6 +820,7 @@ public class GPUSkinningSampler : MonoBehaviour
 		    currentBone.bindpose = bindposes[indexOfSmrBones];
 		    currentBone.isSkinningBone = true;
 	    }
+	    
 	    currentBone.parentBoneIndex = parentBone == null ? -1 : bones_result.IndexOf(parentBone);
 
 	    if(parentBone != null)
@@ -838,19 +840,55 @@ public class GPUSkinningSampler : MonoBehaviour
 	    }
     }
 
-    private GPUSkinningBone[] CollectSkinningBones(GPUSkinningBone[] bones)
+    private GPUSkinningBone[] CollectSkinningBones(GPUSkinningBone[] bones, Transform[] bones_smr)
     {
 	    List<GPUSkinningBone> skinningBones = new List<GPUSkinningBone>();
 	    for (int i = 0; i < bones.Length; i++)
 	    {
 		    if (bones[i].isSkinningBone)
 		    {
-			    skinningBones.Add(bones[i]);
+			    GPUSkinningBone currentBone = new GPUSkinningBone();
+			    currentBone = bones[i];
+			    skinningBones.Add(currentBone);
 		    }
 	    }
+	    GPUSkinningBone[] skinningBonesArray = skinningBones.ToArray();
 
-	    return skinningBones.ToArray();
+	    // GPUSkinningBone bone;
+	    // for (int i = 0; i < skinningBonesArray.Length; i++)
+	    // {
+		   //  bone = skinningBonesArray[i];
+		   //  int parentIndex = GetBoneIndex(skinningBonesArray, bone.transform.parent);
+		   //  bone.parentBoneIndex = parentIndex;
+		   //  
+		   //  int childCount = bone.transform.childCount;
+		   //  List<int> childrenBonesIndexList = new List<int>();
+		   //  for (int j = 0; j < childCount; j++)
+		   //  {
+			  //   var childIndex= GetBoneIndex(skinningBonesArray, bone.transform.GetChild(j));
+			  //   if (childIndex != -1)
+			  //   {
+				 //    childrenBonesIndexList.Add(childIndex);
+			  //   }
+		   //  }
+		   //  bone.childrenBonesIndices = childrenBonesIndexList.ToArray();
+	    // }
+	    
+	    return skinningBonesArray;
     }
+
+    private int GetBoneIndex(GPUSkinningBone[] bones, Transform bone)
+    {
+	    for (int i = 0; i < bones.Length; i++)
+	    {
+		    if (bones[i].transform == bone)
+		    {
+			    return i;
+		    }
+	    }
+	    return -1;
+    }
+
 
     private void ClearSkinningBones()
     {
@@ -878,7 +916,23 @@ public class GPUSkinningSampler : MonoBehaviour
 	    //Debug.Log(index);
 	    return index;
     }
-    
+
+    // Todo
+    private int GetSkinningBoneParentIndex(GPUSkinningBone bone)
+    {
+	    if (bone.parentBoneIndex == -1)
+	    {
+		    return -1;
+	    }
+	    GPUSkinningBone parentBone = gpuSkinningAnimation.bones[bone.parentBoneIndex];
+	    if (!parentBone.isSkinningBone)
+	    {
+		    return -1;
+	    }
+	    int index = System.Array.IndexOf(gpuSkinningAnimation.skinningBones, parentBone);
+	    return index;
+    }
+
     #endregion
     
     #region AnimationClip
@@ -997,12 +1051,11 @@ public class GPUSkinningSampler : MonoBehaviour
 			    Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindMatrix);
 			    Vector3 scaleBind = bindMatrix.lossyScale;
 			    var bindPos = bindMatrix.GetColumn(3);
-			    var parentBone = gpuSkinningAnim.bones[curBone.parentBoneIndex];
-			    var parentBoneIndex = GetBoneIndex(parentBone);
 			    pixelsBind[bindPixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
 			    bindPixelIndex++;
 			    pixelsBind[bindPixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
 			    bindPixelIndex++;
+			    int parentBoneIndex = GetSkinningBoneParentIndex(curBone);
 			    pixelsBind[bindPixelIndex] = new Color(parentBoneIndex, 0, 0, 0);
 			    bindPixelIndex++;
 		    }

@@ -14,7 +14,6 @@ public class GPUSkinningAnimation : ScriptableObject
 
     public int skinningBoneNum = 0;
     
-    [HideInInspector]
     public GPUSkinningBone[] skinningBones = null; 
     
     public int rootBoneIndex = 0;

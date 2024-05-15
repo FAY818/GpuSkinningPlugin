@@ -351,27 +351,28 @@ public class GPUSkinningSamplerEditor : Editor
                                     EditorGUILayout.PropertyField(prop, new GUIContent());
                                     GUI.enabled = true && guiEnabled;
                                 }
+                                // 以上功能暂不开启
                                 if(j == 3)
                                 {
-                                    EditorGUILayout.BeginHorizontal();
-                                    GUILayout.FlexibleSpace();
-                                    prop4.boolValue = GUILayout.Toggle(prop4.boolValue, string.Empty);
-                                    GUILayout.FlexibleSpace();
-                                    EditorGUILayout.EndHorizontal();
+                                    // EditorGUILayout.BeginHorizontal();
+                                    // GUILayout.FlexibleSpace();
+                                    // prop4.boolValue = GUILayout.Toggle(prop4.boolValue, string.Empty);
+                                    // GUILayout.FlexibleSpace();
+                                    // EditorGUILayout.EndHorizontal();
                                 }
                                 if (j == 4)
                                 {
-                                    EditorGUILayout.BeginHorizontal();
-                                    GUILayout.FlexibleSpace();
-                                    GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
-                                    prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
-                                    if(!GUI.enabled)
-                                    {
-                                        prop5.boolValue = false;
-                                    }
-                                    GUI.enabled = true && guiEnabled;
-                                    GUILayout.FlexibleSpace();
-                                    EditorGUILayout.EndHorizontal();
+                                    // EditorGUILayout.BeginHorizontal();
+                                    // GUILayout.FlexibleSpace();
+                                    // GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
+                                    // prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
+                                    // if(!GUI.enabled)
+                                    // {
+                                    //     prop5.boolValue = false;
+                                    // }
+                                    // GUI.enabled = true && guiEnabled;
+                                    // GUILayout.FlexibleSpace();
+                                    // EditorGUILayout.EndHorizontal();
                                 }
                             }
                         }
