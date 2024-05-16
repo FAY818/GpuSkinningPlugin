@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6dd8c482580fe4e09bcea6f4a052303b, type: 3}
-  m_Name: GPUSKinning_Anim_man
+  m_Name: GPUSKinning_Anim_man01
   m_EditorClassIdentifier: 
-  guid: dfc50d7b-1386-4105-be8e-0c37f6924798
-  name: man
+  guid: 123c364d-9138-4ae8-9be4-e1f97ee4c10e
+  name: man01
   bones:
   - bindpose:
       e00: 1
@@ -611,7 +611,7 @@ MonoBehaviour:
     childrenBonesIndices: 
     name: d_weapon_right
     guid: c9d1ac70871f6c3a4bd4f68e722b138e
-    isExposed: 0
+    isExposed: 1
     isSkinningBone: 0
   - bindpose:
       e00: -0.17988001
@@ -680,7 +680,7 @@ MonoBehaviour:
     childrenBonesIndices: 
     name: d_fly
     guid: 94e1d67740d497328b48fa45fb10c3a3
-    isExposed: 0
+    isExposed: 1
     isSkinningBone: 0
   - bindpose:
       e00: 0.17019711
@@ -727,7 +727,7 @@ MonoBehaviour:
     name: connectBone003
     guid: 9824e555c13afc9784d3615f32676d19
     isExposed: 0
-    isSkinningBone: 0
+    isSkinningBone: 1
   - bindpose:
       e00: 0.41571492
       e01: -0.14003602
@@ -773,7 +773,7 @@ MonoBehaviour:
     name: Bone_qunbai02
     guid: e5e24a903a3241c604828a523379bb15
     isExposed: 0
-    isSkinningBone: 0
+    isSkinningBone: 1
   - bindpose:
       e00: 1
       e01: 0
@@ -796,7 +796,7 @@ MonoBehaviour:
     name: connectBone004
     guid: 99d57337d6da5630b2453870f6417d06
     isExposed: 0
-    isSkinningBone: 0
+    isSkinningBone: 1
   - bindpose:
       e00: 1
       e01: 0
@@ -819,7 +819,7 @@ MonoBehaviour:
     name: Bone_qunbai08
     guid: 4be3069905ac649f1e31de8e42e969b5
     isExposed: 0
-    isSkinningBone: 0
+    isSkinningBone: 1
   - bindpose:
       e00: -0.14429559
       e01: -0.07088714
@@ -865,7 +865,7 @@ MonoBehaviour:
     name: connectBone001
     guid: 5f3ae5be959028a180149fbf913d7c0d
     isExposed: 0
-    isSkinningBone: 0
+    isSkinningBone: 1
   - bindpose:
       e00: -0.37381473
       e01: -0.23732722
@@ -934,7 +934,7 @@ MonoBehaviour:
     name: connectBone002
     guid: 9e3eda384d72169ca8e36fd789684e50
     isExposed: 0
-    isSkinningBone: 0
+    isSkinningBone: 1
   - bindpose:
       e00: 0.0001345949
       e01: -0.40193164
@@ -1003,813 +1003,6 @@ MonoBehaviour:
     name: Bone_qunbai11
     guid: 345bc91146848830949b7c96d0dd82c0
     isExposed: 0
-    isSkinningBone: 0
-  - bindpose:
-      e00: 0.109123394
-      e01: 0.017965466
-      e02: 0.99386585
-      e03: -1.4218158
-      e10: 0.77912366
-      e11: 0.61936086
-      e12: -0.096741155
-      e13: 0.2843107
-      e20: -0.6172995
-      e21: 0.78490096
-      e22: 0.05358943
-      e23: -0.07874428
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 2
-    childrenBonesIndices: 2c000000
-    name: Bone_qunbai06
-    guid: e5aa95c661f6939f48cf088231ca8735
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.11134273
-      e01: 0.019722084
-      e02: 0.9935863
-      e03: -0.7137727
-      e10: 0.7788128
-      e11: 0.6193036
-      e12: -0.099567704
-      e13: 0.28634244
-      e20: -0.61729527
-      e21: 0.7849039
-      e22: 0.05359514
-      e23: -0.07874744
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 43
-    childrenBonesIndices: 
-    name: Bone_qunbai12
-    guid: d7f551f3098d8dea54f4d1c0d56fecae
-    isExposed: 0
-    isSkinningBone: 1
-  skinningBoneNum: 35
-  skinningBones:
-  - bindpose:
-      e00: 0.0000013709068
-      e01: 1
-      e02: -6.123234e-17
-      e03: 0.031561
-      e10: -1
-      e11: 0.0000013709068
-      e12: 6.1232257e-17
-      e13: 0.00000004326719
-      e20: 6.123234e-17
-      e21: 6.1232257e-17
-      e22: 1
-      e23: -1.268292
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 0
-    childrenBonesIndices: 02000000
-    name: Bip001
-    guid: 0068a1bc78048d2834772ddda3febec1
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.0000013868001
-      e01: -6.123234e-17
-      e02: -1
-      e03: 1.268292
-      e10: -0.000002757707
-      e11: -1
-      e12: -3.824327e-12
-      e13: -0.031561
-      e20: -1
-      e21: 0.000002757707
-      e22: -0.0000013868001
-      e23: 0.0000018459034
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 1
-    childrenBonesIndices: 030000001d000000200000002300000026000000290000002b000000
-    name: Bip001 Pelvis
-    guid: d6f1b7dd54a378e55f505bdbb1cc333e
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.0000000010916178
-      e01: 0.00079631794
-      e02: -0.99999964
-      e03: 1.3790216
-      e10: 0.0000014026937
-      e11: -0.99999964
-      e12: -0.00079631794
-      e13: -0.030299276
-      e20: -1
-      e21: -0.0000014026924
-      e22: -0.0000000022086077
-      e23: -0.000000040770885
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 2
-    childrenBonesIndices: 04000000070000000a000000
-    name: Bip001 Spine
-    guid: 064f3cd964fbe220d33b2d4bdd86fdc9
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.030623568
-      e01: -0.030866668
-      e02: 0.9990543
-      e03: -1.2647736
-      e10: -0.16695029
-      e11: -0.9856398
-      e12: -0.02533476
-      e13: -0.016928809
-      e20: 0.98548955
-      e21: -0.16601653
-      e22: -0.035337
-      e23: 0.14555262
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 3
-    childrenBonesIndices: 05000000
-    name: Bip001 L Thigh
-    guid: c81b448a8cef2be2311a37db83a0fab9
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.01625826
-      e01: -0.114903614
-      e02: 0.9932436
-      e03: -0.7036337
-      e10: -0.16895527
-      e11: -0.97940576
-      e12: -0.11053718
-      e13: 0.043302488
-      e20: 0.98548955
-      e21: -0.16601658
-      e22: -0.035337
-      e23: 0.1455526
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 4
-    childrenBonesIndices: 06000000
-    name: Bip001 L Calf
-    guid: e5c7f485ce5d0508a2a66bb13dc6a72e
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.000000015893262
-      e01: 6.123234e-17
-      e02: 1.0000001
-      e03: -0.091799736
-      e10: -0.2536566
-      e11: -0.9672944
-      e12: 0.0000000040314303
-      e13: 0.021047184
-      e20: 0.96729434
-      e21: -0.25365657
-      e22: -0.00000001537346
-      e23: 0.14486083
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 5
-    childrenBonesIndices: 
-    name: Bip001 L Foot
-    guid: db5633865796c8e4ab526dec609b1594
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.030623829
-      e01: -0.030866582
-      e02: 0.9990543
-      e03: -1.2647736
-      e10: 0.16694753
-      e11: -0.9856402
-      e12: -0.02533473
-      e13: -0.016928859
-      e20: 0.98548996
-      e21: 0.16601378
-      e22: 0.035337172
-      e23: -0.14555292
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 3
-    childrenBonesIndices: 08000000
-    name: Bip001 R Thigh
-    guid: 8e86c1fd07a149cb838fb781ea8481f7
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.016258748
-      e01: -0.11490357
-      e02: 0.9932436
-      e03: -0.7036337
-      e10: 0.1689526
-      e11: -0.97940624
-      e12: -0.11053715
-      e13: 0.043302428
-      e20: 0.98548996
-      e21: 0.16601387
-      e22: 0.035337172
-      e23: -0.14555292
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 7
-    childrenBonesIndices: 09000000
-    name: Bip001 R Calf
-    guid: 29e9bda369864aaf86c76ab41384a418
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.000000015893262
-      e01: 6.123234e-17
-      e02: 1.0000001
-      e03: -0.09179974
-      e10: 0.25365394
-      e11: -0.96729505
-      e12: -0.0000000040313886
-      e13: 0.021047104
-      e20: 0.967295
-      e21: 0.25365394
-      e22: -0.000000015373471
-      e23: -0.14486112
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 8
-    childrenBonesIndices: 
-    name: Bip001 R Foot
-    guid: e7b52304689661f00ba9f30ebf3ad5d5
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.00000035489535
-      e01: -0.25887632
-      e02: -0.96591043
-      e03: 1.5223339
-      e10: 0.000001449427
-      e11: -0.96591043
-      e12: 0.25887632
-      e13: -0.44048148
-      e20: -1
-      e21: -0.0000013081427
-      e22: 0.00000071801946
-      e23: -0.0000011784524
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 3
-    childrenBonesIndices: 0b0000001c000000
-    name: Bip001 Spine1
-    guid: 04bf2f6dcac22a9640dcf0830b400e9a
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.00000035886058
-      e01: 0.26176873
-      e02: -0.9651307
-      e03: 1.7922798
-      e10: 0.0000014504959
-      e11: -0.9651307
-      e12: -0.26176873
-      e13: 0.53342897
-      e20: -1
-      e21: -0.0000013059795
-      e22: -0.0000007260417
-      e23: 0.0000015227857
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 10
-    childrenBonesIndices: 0c0000000f00000015000000
-    name: Bip001 Neck
-    guid: 6217d6fb752c4358e3da4d880ec0d2ab
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.00000019842358
-      e01: 0.14473616
-      e02: -0.9894703
-      e03: 1.9146595
-      e10: 0.0000014171285
-      e11: -0.9894703
-      e12: -0.14473616
-      e13: 0.3071604
-      e20: -1
-      e21: -0.0000013734874
-      e22: -0.00000040144394
-      e23: 0.0000008952146
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 11
-    childrenBonesIndices: 0d000000
-    name: Bip001 Head
-    guid: 9285c8b954bfb3e8116fd6bd78a4fa2d
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.000000055548274
-      e01: -0.18323849
-      e02: 0.9830684
-      e03: -1.9687376
-      e10: -0.00000008070398
-      e11: 0.9830683
-      e12: 0.18323848
-      e13: -0.4766311
-      e20: -1
-      e21: -0.00000006915897
-      e22: -0.000000069395846
-      e23: -0.00000039389295
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 12
-    childrenBonesIndices: 0e000000
-    name: Bone_hair01
-    guid: 87fbf1e1ba6a0fbb969966b41cb66460
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.00000014311789
-      e01: -0.18144865
-      e02: 0.9834005
-      e03: -1.4241505
-      e10: 0.000000006819815
-      e11: 0.9834004
-      e12: 0.18144864
-      e13: -0.47403944
-      e20: -1
-      e21: 0.000000032675153
-      e22: -0.00000013950473
-      e23: -0.00000029533652
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 13
-    childrenBonesIndices: 
-    name: Bone_hair02
-    guid: eb95b45fadf0e813083f59b9c20cccd1
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.9729777
-      e01: 0.059950642
-      e02: 0.22298056
-      e03: -0.35616645
-      e10: 0.0000013367808
-      e11: 0.965704
-      e12: -0.2596454
-      e13: 0.42243698
-      e20: -0.23089913
-      e21: 0.2526295
-      e22: 0.9396084
-      e23: -1.7308959
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 11
-    childrenBonesIndices: 10000000
-    name: Bip001 L Clavicle
-    guid: 2ed7873419792ebc972327ea365fddc3
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.6123339
-      e01: -0.07346841
-      e02: 0.78717834
-      e03: -1.3072792
-      e10: 0.05669137
-      e11: 0.99719
-      e12: 0.048969734
-      e13: -0.1223851
-      e20: -0.7885641
-      e21: 0.014640388
-      e22: 0.6147783
-      e23: -1.228952
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 15
-    childrenBonesIndices: 11000000
-    name: Bip001 L UpperArm
-    guid: 0008c2696c79a1da4be9493dfc4ab2d7
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.6058663
-      e01: 0.1897156
-      e02: 0.7726151
-      e03: -0.9926406
-      e10: -0.10532167
-      e11: 0.98172987
-      e12: -0.15847299
-      e13: 0.14199159
-      e20: -0.7885641
-      e21: 0.0146403415
-      e22: 0.6147783
-      e23: -1.2289519
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 16
-    childrenBonesIndices: 1200000013000000
-    name: Bip001 L Forearm
-    guid: 7218847685bc075eea4bd71cbd418162
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.44599319
-      e01: 0.12261179
-      e02: 0.8865982
-      e03: -0.8942292
-      e10: 0.89397454
-      e11: -0.012786814
-      e12: -0.4479354
-      e13: 1.0726696
-      e20: -0.04358539
-      e21: 0.9923723
-      e22: -0.11531464
-      e23: 0.12065367
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 17
-    childrenBonesIndices: 
-    name: Bip001 L Hand
-    guid: 00a544f4b02aa52af3cc2b19805fdbe1
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.17987947
-      e01: -0.30518162
-      e02: 0.93515074
-      e03: -1.2238591
-      e10: 0.46359584
-      e11: 0.8647629
-      e12: 0.19303663
-      e13: -0.1483844
-      e20: -0.86759526
-      e21: 0.3988088
-      e22: 0.29703414
-      e23: -0.73284864
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 17
-    childrenBonesIndices: 14000000
-    name: Bone_xiubai_l_01
-    guid: b822c2fb98a76e1f22cf6f88a4214086
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.16584496
-      e01: -0.4940758
-      e02: 0.853454
-      e03: -0.58574396
-      e10: 0.49634156
-      e11: 0.7896502
-      e12: 0.36068884
-      e13: -0.26796815
-      e20: -0.8521382
-      e21: 0.36378643
-      e22: 0.37619007
-      e23: -0.7894032
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 19
-    childrenBonesIndices: 
-    name: Bone_xiubai_l_02
-    guid: c87692bb30d95ae31568945fd54a785b
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.97297746
-      e01: 0.059953302
-      e02: 0.22298054
-      e03: -0.35616633
-      e10: 0.0000013108773
-      e11: 0.965704
-      e12: -0.2596454
-      e13: 0.42243695
-      e20: -0.23089981
-      e21: -0.25262886
-      e22: -0.9396084
-      e23: 1.7308959
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 11
-    childrenBonesIndices: 16000000
-    name: Bip001 R Clavicle
-    guid: 4ba76db6e5a7855e9e660338474e2f2f
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.61233413
-      e01: -0.073466726
-      e02: 0.7871783
-      e03: -1.3072791
-      e10: -0.056688625
-      e11: 0.9971902
-      e12: 0.04896974
-      e13: -0.12238511
-      e20: -0.78856415
-      e21: -0.0146382125
-      e22: -0.61477834
-      e23: 1.2289522
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 21
-    childrenBonesIndices: 17000000
-    name: Bip001 R UpperArm
-    guid: 01c361f349bc7d3b539afba44eb7cd30
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.60586584
-      e01: 0.18971725
-      e02: 0.772615
-      e03: -0.9926405
-      e10: 0.105324365
-      e11: 0.98172957
-      e12: -0.15847297
-      e13: 0.14199157
-      e20: -0.78856415
-      e21: -0.014638174
-      e22: -0.61477834
-      e23: 1.2289522
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 22
-    childrenBonesIndices: 180000001a000000
-    name: Bip001 R Forearm
-    guid: 532fb57417b8a1aa185b9128a1bde135
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.4459929
-      e01: 0.12261303
-      e02: 0.8865982
-      e03: -0.89422905
-      e10: -0.89397454
-      e11: -0.012784352
-      e12: -0.44793543
-      e13: 1.0726697
-      e20: -0.043588128
-      e21: -0.9923721
-      e22: 0.11531463
-      e23: -0.12065365
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 23
-    childrenBonesIndices: 19000000
-    name: Bip001 R Hand
-    guid: b51108d6eab5758b49a1b9b7ea586eb3
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.17988001
-      e01: -0.3051822
-      e02: 0.93515104
-      e03: -1.2238065
-      e10: -0.4635957
-      e11: 0.864763
-      e12: 0.1930369
-      e13: -0.14825357
-      e20: -0.8675954
-      e21: -0.39880848
-      e22: -0.29703468
-      e23: 0.7330957
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 23
-    childrenBonesIndices: 1b000000
-    name: Bone_xiubai_r_01
-    guid: b83036b0f56cd9a280d72a60f763e9a1
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.16584499
-      e01: -0.49407637
-      e02: 0.8534541
-      e03: -0.5856952
-      e10: -0.49634215
-      e11: 0.78965
-      e12: 0.36068904
-      e13: -0.26782727
-      e20: -0.85213834
-      e21: -0.3637869
-      e22: -0.37619057
-      e23: 0.78964585
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 26
-    childrenBonesIndices: 
-    name: Bone_xiubai_r_02
-    guid: fef0ffb2577250390e1325f221a86232
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.17019711
-      e01: -0.09277633
-      e02: 0.9810326
-      e03: -1.3858672
-      e10: 0.85569465
-      e11: -0.47980967
-      e12: -0.19382815
-      e13: 0.36011472
-      e20: 0.48869163
-      e21: 0.87245345
-      e22: -0.0022740061
-      e23: 0.03871341
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 2
-    childrenBonesIndices: 1e000000
-    name: Bone_qunbai01
-    guid: e6993613ce0a30d9e6009e64cc643ce5
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.41571492
-      e01: -0.14003602
-      e02: 0.8986486
-      e03: -0.35161802
-      e10: 0.7917556
-      e11: -0.4305003
-      e12: -0.4333509
-      e13: 0.44502908
-      e20: 0.44755334
-      e21: 0.89166075
-      e22: -0.06809111
-      e23: 0.036685485
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 30
-    childrenBonesIndices: 
-    name: Bone_qunbai07
-    guid: 10a12b3239b99627e95530ce3b4716a1
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.14429559
-      e01: -0.07088714
-      e02: 0.98699236
-      e03: -1.3968608
-      e10: -0.8605514
-      e11: -0.48340586
-      e12: -0.16052915
-      e13: 0.3325222
-      e20: 0.48849732
-      e21: -0.87252134
-      e22: 0.008751301
-      e23: -0.047759812
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 2
-    childrenBonesIndices: 24000000
-    name: Bone_qunbai03
-    guid: e7bba7e5226df8de51ea67c00f3036c9
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.37381473
-      e01: -0.23732722
-      e02: 0.89662594
-      e03: -0.35247564
-      e10: -0.7913246
-      e11: -0.42264825
-      e12: -0.4417837
-      e13: 0.4518309
-      e20: 0.48380476
-      e21: -0.87466764
-      e22: -0.029810742
-      e23: 0.008646874
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 36
-    childrenBonesIndices: 
-    name: Bone_qunbai09
-    guid: 4a6318ab3a3e608800dfa9064ecece69
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.004087517
-      e01: -0.1241704
-      e02: 0.9922526
-      e03: -1.4123964
-      e10: 0.00014690781
-      e11: -0.99226075
-      e12: -0.124172024
-      e13: 0.23356071
-      e20: 0.99999166
-      e21: 0.0006533249
-      e22: -0.004037641
-      e23: 0.0057388493
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 2
-    childrenBonesIndices: 27000000
-    name: Bone_qunbai04
-    guid: 405d833fa05209e124d63c0ddb85fa66
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: 0.0001345949
-      e01: -0.40193164
-      e02: 0.9156693
-      e03: -0.3674382
-      e10: 0.00090506504
-      e11: -0.9156689
-      e12: -0.4019316
-      e13: 0.39184818
-      e20: 0.99999964
-      e21: 0.00088283885
-      e22: 0.00024053008
-      e23: -0.00031248803
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 39
-    childrenBonesIndices: 
-    name: Bone_qunbai10
-    guid: d39263fd8645eb0bed30200e5deb7e29
-    isExposed: 0
-    isSkinningBone: 1
-  - bindpose:
-      e00: -0.10911761
-      e01: 0.017968282
-      e02: 0.99386644
-      e03: -1.4218414
-      e10: -0.7791241
-      e11: 0.6193603
-      e12: -0.096738346
-      e13: 0.28413114
-      e20: -0.6172998
-      e21: -0.78490126
-      e22: -0.05358361
-      e23: 0.07859679
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    parentBoneIndex: 2
-    childrenBonesIndices: 2a000000
-    name: Bone_qunbai05
-    guid: 8637cca3c5ff51cd803eddbb197ce2e1
-    isExposed: 0
     isSkinningBone: 1
   - bindpose:
       e00: 0.109123394
@@ -1857,12 +1050,14 @@ MonoBehaviour:
     guid: d7f551f3098d8dea54f4d1c0d56fecae
     isExposed: 0
     isSkinningBone: 1
+  skinningBoneNum: 42
+  skinningBones: []
   rootBoneIndex: 0
   clips:
   - name: b_skill_8
     length: 1.5333334
     fps: 30
-    wrapMode: 0
+    wrapMode: 1
     frames:
     - matrices:
       - e00: 1
@@ -49657,7 +48852,7 @@ MonoBehaviour:
       rootMotionDeltaPositionQ: {x: 0, y: 0, z: -0.008726535, w: 0.9999619}
       rootMotionDeltaPositionL: 0
       rootMotionDeltaRotation: {x: 0, y: 0, z: 0, w: 1}
-    pixelSegmentation: 3220
+    pixelSegmentation: 3864
     rootMotionEnabled: 0
     individualDifferenceEnabled: 0
     events: []
@@ -74282,7 +73477,7 @@ MonoBehaviour:
       rootMotionDeltaPositionQ: {x: 0, y: 0, z: -0.008726535, w: 0.9999619}
       rootMotionDeltaPositionL: 0
       rootMotionDeltaRotation: {x: 0, y: 0, z: 0, w: 1}
-    pixelSegmentation: 4620
+    pixelSegmentation: 5544
     rootMotionEnabled: 0
     individualDifferenceEnabled: 0
     events: []
@@ -74290,7 +73485,7 @@ MonoBehaviour:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
   textureWidth: 128
-  textureHeight: 64
+  textureHeight: 128
   bindTextureWidth: 16
   bindTextureHeight: 8
   lodDistances:

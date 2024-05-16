@@ -270,7 +270,7 @@ public class GPUSkinningSampler : MonoBehaviour
                         string textureRawBindDataFileName = "GPUSKinning_TextureBind_" + animName + ".bytes";
                         CreatePrefab(dir, prefabFileName, dataFileName, meshFileName, mtrlFileName, textureRawDataFileName, textureRawBindDataFileName);
                     }
-                    //ClearSkinningBones();
+                    ClearSkinningBones();
                     anim = gpuSkinningAnimation;
                     AssetDatabase.Refresh();
 					AssetDatabase.SaveAssets();
@@ -854,6 +854,7 @@ public class GPUSkinningSampler : MonoBehaviour
 	    }
 	    GPUSkinningBone[] skinningBonesArray = skinningBones.ToArray();
 
+	    // 用以查看蒙皮骨骼的索引信息
 	    // GPUSkinningBone bone;
 	    // for (int i = 0; i < skinningBonesArray.Length; i++)
 	    // {
@@ -913,7 +914,6 @@ public class GPUSkinningSampler : MonoBehaviour
     private int GetBoneIndex(GPUSkinningBone bone)
     {
 	    int index = System.Array.IndexOf(gpuSkinningAnimation.skinningBones, bone);
-	    //Debug.Log(index);
 	    return index;
     }
 
@@ -1042,23 +1042,20 @@ public class GPUSkinningSampler : MonoBehaviour
 	    textureBind.filterMode = FilterMode.Point;
 	    Color[] pixelsBind = textureBind.GetPixels();
 	    int bindPixelIndex = 0;
-	    for (int i = 0; i < gpuSkinningAnim.bones.Length; i++)
+	    for (int i = 0; i < gpuSkinningAnim.skinningBones.Length; i++)
 	    {
-		    GPUSkinningBone curBone = gpuSkinningAnim.bones[i];
-		    if (curBone.isSkinningBone)
-		    {
-			    Matrix4x4 bindMatrix = curBone.bindpose;
-			    Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindMatrix);
-			    Vector3 scaleBind = bindMatrix.lossyScale;
-			    var bindPos = bindMatrix.GetColumn(3);
-			    pixelsBind[bindPixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
-			    bindPixelIndex++;
-			    pixelsBind[bindPixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
-			    bindPixelIndex++;
-			    int parentBoneIndex = GetSkinningBoneParentIndex(curBone);
-			    pixelsBind[bindPixelIndex] = new Color(parentBoneIndex, 0, 0, 0);
-			    bindPixelIndex++;
-		    }
+		    GPUSkinningBone curBone = gpuSkinningAnim.skinningBones[i];
+		    Matrix4x4 bindMatrix = curBone.bindpose;
+		    Quaternion rotationBind = GPUSkinningUtil.ToQuaternion(bindMatrix);
+		    Vector3 scaleBind = bindMatrix.lossyScale;
+		    var bindPos = bindMatrix.GetColumn(3);
+		    pixelsBind[bindPixelIndex] = new Color(rotationBind.x, rotationBind.y, rotationBind.z, rotationBind.w);
+		    bindPixelIndex++;
+		    pixelsBind[bindPixelIndex] = new Color(bindPos.x, bindPos.y, bindPos.z, scaleBind.x);
+		    bindPixelIndex++;
+		    int parentBoneIndex = GetSkinningBoneParentIndex(curBone);
+		    pixelsBind[bindPixelIndex] = new Color(parentBoneIndex, 0, 0, 0);
+		    bindPixelIndex++;
 	    }
 	    
 	    textureBind.SetPixels(pixelsBind);

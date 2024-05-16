@@ -11,7 +11,7 @@ public class GPUSkinningPlayerJoint : MonoBehaviour
     [HideInInspector]
     [SerializeField]
     private int boneIndex = 0;
-
+    
     [HideInInspector]
     [SerializeField]
     private string boneGUID = null;
@@ -25,7 +25,7 @@ public class GPUSkinningPlayerJoint : MonoBehaviour
             return boneIndex;
         }
     }
-
+    
     public string BoneGUID
     {
         get

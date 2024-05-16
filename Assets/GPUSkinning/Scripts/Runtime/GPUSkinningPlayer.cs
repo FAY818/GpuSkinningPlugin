@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 /// <summary>
 /// 动画播放器
@@ -736,12 +737,118 @@ public class GPUSkinningPlayer
     #endregion
 
     #region 挂点相关
-
+    
     private Vector4 posCache = new Vector4();
     private Vector4 posCacheNext = new Vector4();
-
     private Vector3 scaleCache = new Vector3();
+    
+    private Vector4 GetInterpolationPos(Matrix4x4 jointMatrix, Matrix4x4 nextJointMatrix, float interpolationFactor)
+    {
+        Vector4 pos = jointMatrix.GetColumn(3);
+        Vector3 scale = jointMatrix.lossyScale;
+        posCache.x = pos.x;
+        posCache.y = pos.y;
+        posCache.z = pos.z;
+        posCache.w = Mathf.Clamp01(scale.x);
+        
+        var posNext = nextJointMatrix.GetColumn(3);
+        Vector3 scaleNext = nextJointMatrix.lossyScale;
+        posCacheNext.x = posNext.x;
+        posCacheNext.y = posNext.y;
+        posCacheNext.z = posNext.z;
+        posCacheNext.w = Mathf.Clamp01(scaleNext.x);
+        
+        pos = Vector4.Lerp(posCache, posCacheNext, interpolationFactor);
+        return pos;
+    }
 
+    private Quaternion GetInterpolationRotation(Matrix4x4 jointMatrix, Matrix4x4 nextJointMatrix, float interpolationFactor)
+    {
+        Quaternion rotation = GPUSkinningUtil.ToQuaternion(jointMatrix); 
+        Quaternion rotationNext = GPUSkinningUtil.ToQuaternion(nextJointMatrix); 
+        rotation = Quaternion.Slerp(rotation, rotationNext, interpolationFactor);
+        return rotation;
+    }
+
+    private int GetParentIndex(int boneIndex)
+    {
+        if (res == null) return -1;
+        if (res.anim == null) return -1;
+        GPUSkinningBone[] bones = res.anim.bones;
+        int parentBoneIndex = bones[boneIndex].parentBoneIndex;
+
+        return parentBoneIndex;
+    }
+
+    private Matrix4x4 GetMatrixPalette(int boneIndex, Matrix4x4[] jointMatrixs, Matrix4x4[] nextJointMatrixs, float interpolationFactor)
+    {
+        Matrix4x4 jointMatrix;
+        Matrix4x4 nextJointMatrix;
+        Vector4 pos;
+        Quaternion rotation;
+        Matrix4x4 matrix4X4;
+        Matrix4x4 matrixPalette = Matrix4x4.identity;
+        do
+        {
+            jointMatrix = jointMatrixs[boneIndex];
+            nextJointMatrix = nextJointMatrixs[boneIndex];
+            pos = GetInterpolationPos(jointMatrix, nextJointMatrix, interpolationFactor);
+            rotation = GetInterpolationRotation(jointMatrix, nextJointMatrix, interpolationFactor);
+            matrix4X4 = GPUSkinningUtil.DualQuaternionToMatrix(rotation, pos);
+            matrixPalette = matrix4X4 * matrixPalette;
+            boneIndex = GetParentIndex(boneIndex);
+            
+        } while (boneIndex != -1);
+
+        return matrixPalette;
+    }
+    
+    private Matrix4x4 GetCrossFadeMatrixPalette(
+        int boneIndex, 
+        Matrix4x4[] jointMatrixsA,
+        Matrix4x4[] nextJointMatrixsA,
+        Matrix4x4[] jointMatrixsB,
+        Matrix4x4[] nextJointMatrixsB,
+        float interpolationFactorA,
+        float interpolationFactorB, 
+        float crossFadeBlendFactor)
+    {
+        Matrix4x4 jointMatrixA;
+        Matrix4x4 nextJointMatrixA;
+        Vector4 posA;
+        Quaternion rotationA;
+        Matrix4x4 jointMatrixB;
+        Matrix4x4 nextJointMatrixB;
+        Vector4 posB;
+        Quaternion rotationB;
+        Vector4 pos;
+        Quaternion rotation;
+        Matrix4x4 matrix4X4;
+        Matrix4x4 matrixPalette = Matrix4x4.identity;
+        
+        do
+        {
+            jointMatrixA = jointMatrixsA[boneIndex];
+            nextJointMatrixA = nextJointMatrixsA[boneIndex];
+            posA = GetInterpolationPos(jointMatrixA, nextJointMatrixA, interpolationFactorA);
+            rotationA = GetInterpolationRotation(jointMatrixA, nextJointMatrixA, interpolationFactorA);
+        
+            jointMatrixB = jointMatrixsB[boneIndex];
+            nextJointMatrixB = nextJointMatrixsB[boneIndex];
+            posB = GetInterpolationPos(jointMatrixB, nextJointMatrixB, interpolationFactorB);
+            rotationB = GetInterpolationRotation(jointMatrixB, nextJointMatrixB, interpolationFactorB);
+            
+            pos = Vector4.Lerp(posA, posB, crossFadeBlendFactor);
+            rotation = Quaternion.Slerp(rotationA, rotationB, crossFadeBlendFactor);
+            matrix4X4 = GPUSkinningUtil.DualQuaternionToMatrix(rotation, pos);
+            matrixPalette = matrix4X4 * matrixPalette;
+            boneIndex = GetParentIndex(boneIndex);
+        } 
+        while (boneIndex != -1);
+        
+        return matrixPalette;
+    }
+    
     // 更新挂点位置，间隔帧融合
     private void UpdateJoints(GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float interpolationFactor)
     {
@@ -764,43 +871,21 @@ public class GPUSkinningPlayer
             Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
             if (jointTransform != null)
             {
-                Matrix4x4 jointMatrix = matrices[joint.BoneIndex];
-                Matrix4x4 nextJointMatrix = nextMatrices[joint.BoneIndex];
-
                 // TODO 处理RootMotion的插帧
-                if (playingClip.rootMotionEnabled && rootMotionEnabled)
-                {
-                    jointMatrix =
-                        frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) *
-                        jointMatrix;
-                }
-
-                // MultiplyVector：只关心方向和缩放，MultiplyPoint：适用于完整的变换
-                // 对于骨骼本身而言，并不需要考虑绑定矩阵
-                Quaternion rotation = GPUSkinningUtil.ToQuaternion(jointMatrix); // 提取旋转相关的4元数
-                Vector3 scale = jointMatrix.lossyScale;
-                var pos = jointMatrix.GetColumn(3);
-                posCache.x = pos.x;
-                posCache.y = pos.y;
-                posCache.z = pos.z;
-                posCache.w = Mathf.Clamp01(scale.x); // 只考虑同轴缩放
-
-                Quaternion rotationNext = GPUSkinningUtil.ToQuaternion(nextJointMatrix); // 提取旋转相关的4元数
-                Vector3 scaleNext = nextJointMatrix.lossyScale;
-                var posNext = nextJointMatrix.GetColumn(3);
-                posCacheNext.x = posNext.x;
-                posCacheNext.y = posNext.y;
-                posCacheNext.z = posNext.z;
-                posCacheNext.w = Mathf.Clamp01(scaleNext.x);
-
-                pos = Vector4.Lerp(posCache, posCacheNext, interpolationFactor);
-                rotation = Quaternion.Slerp(rotation, rotationNext, interpolationFactor);
-
-                jointTransform.localPosition = pos;
-                jointTransform.localRotation = rotation;
-                scaleCache.x = pos.w;
-                scaleCache.y = pos.w;
-                scaleCache.z = pos.w;
+                // if (playingClip.rootMotionEnabled && rootMotionEnabled)
+                // {
+                //     jointMatrix =
+                //         frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) *
+                //         jointMatrix;
+                // }
+                Matrix4x4 matrix4X4 = GetMatrixPalette(joint.BoneIndex, matrices, nextMatrices, interpolationFactor);
+                
+                jointTransform.localPosition = GPUSkinningUtil.GetPositionFromMatrix(matrix4X4);
+                jointTransform.localRotation = GPUSkinningUtil.GetQuaternionFromMatrix(matrix4X4);
+                float scale = GPUSkinningUtil.GetScaleFromMatrix(matrix4X4);
+                scaleCache.x = scale;
+                scaleCache.y = scale;
+                scaleCache.z = scale;
                 jointTransform.localScale = scaleCache;
                 // jointTransform.localPosition = jointMatrix.MultiplyPoint(Vector3.zero); // 对坐标原点进行变换，来设定关节点在父关节点中的位置坐标
                 // Vector3 jointDir = jointMatrix.MultiplyVector(Vector3.right); // 确定关节X轴方向
@@ -815,13 +900,10 @@ public class GPUSkinningPlayer
             }
         }
     }
-
-    private Vector4 crossPosCache = new Vector4();
-    private Vector4 nextCrossPosCache = new Vector4();
-
+    
     private void UpdateJointsCrossFade(GPUSkinningFrame frameCrossFade, GPUSkinningFrame nextFrameCrossFade,
         GPUSkinningFrame frame, GPUSkinningFrame nextFrame, float lastInterpolationFactor, float InterpolationFactor, 
-        float crossFadeBlendFactorGPUSkinningFrame)
+        float crossFadeBlendFactor)
     {
         if (joints == null)
         {
@@ -839,65 +921,32 @@ public class GPUSkinningPlayer
             Transform jointTransform = Application.isPlaying ? joint.Transform : joint.transform;
             if (jointTransform != null)
             {
-                Matrix4x4 jointMatrix = matrices[joint.BoneIndex];
-                Matrix4x4 nextJointMatrix = nextMatrices[joint.BoneIndex];
-                Matrix4x4 crossJointMatrix = crossMatrices[joint.BoneIndex];
-                Matrix4x4 nextCrossJointMatrix = nextCrossMatrices[joint.BoneIndex];
 
                 // TODO 处理RootMotion的插帧
-                if (playingClip.rootMotionEnabled && rootMotionEnabled)
-                {
-                    jointMatrix =
-                        frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) *
-                        jointMatrix;
-                }
+                // if (playingClip.rootMotionEnabled && rootMotionEnabled)
+                // {
+                //     jointMatrix =
+                //         frame.RootMotionInv(res.anim.rootBoneIndex, res.anim.bones[res.anim.rootBoneIndex].bindpose) *
+                //         jointMatrix;
+                // }
 
-                // MultiplyVector：只关心方向和缩放，MultiplyPoint：适用于完整的变换
-                // 对于骨骼本身而言，并不需要考虑绑定矩阵
-                Quaternion rotation = GPUSkinningUtil.ToQuaternion(jointMatrix); // 提取旋转相关的4元数
-                Vector3 scale = jointMatrix.lossyScale;
-                var pos = jointMatrix.GetColumn(3);
-                posCache.x = pos.x;
-                posCache.y = pos.y;
-                posCache.z = pos.z;
-                posCache.w = Mathf.Clamp01(scale.x); // 只考虑同轴缩放
-
-                Quaternion rotationNext = GPUSkinningUtil.ToQuaternion(nextJointMatrix); // 提取旋转相关的4元数
-                Vector3 scaleNext = nextJointMatrix.lossyScale;
-                var posNext = nextJointMatrix.GetColumn(3);
-                posCacheNext.x = posNext.x;
-                posCacheNext.y = posNext.y;
-                posCacheNext.z = posNext.z;
-                posCacheNext.w = Mathf.Clamp01(scaleNext.x);
-                pos = Vector4.Lerp(posCache, posCacheNext, InterpolationFactor);
-                rotation = Quaternion.Slerp(rotation, rotationNext, InterpolationFactor);
-
-                Quaternion crossRotation = GPUSkinningUtil.ToQuaternion(crossJointMatrix); // 提取旋转相关的4元数
-                Vector3 crossScale = crossJointMatrix.lossyScale;
-                var crossPos = crossJointMatrix.GetColumn(3);
-                crossPosCache.x = crossPos.x;
-                crossPosCache.y = crossPos.y;
-                crossPosCache.z = crossPos.z;
-                crossPosCache.w = Mathf.Clamp01(crossScale.x); // 只考虑同轴缩放
-
-                Quaternion nextCrossRotation = GPUSkinningUtil.ToQuaternion(nextCrossJointMatrix); // 提取旋转相关的4元数
-                Vector3 nextCrossScale = nextCrossJointMatrix.lossyScale;
-                var nextCrossPos = nextCrossJointMatrix.GetColumn(3);
-                nextCrossPosCache.x = nextCrossPos.x;
-                nextCrossPosCache.y = nextCrossPos.y;
-                nextCrossPosCache.z = nextCrossPos.z;
-                nextCrossPosCache.w = Mathf.Clamp01(nextCrossScale.x);
-                crossPos = Vector4.Lerp(crossPosCache, nextCrossPosCache, lastInterpolationFactor);
-                crossRotation = Quaternion.Slerp(crossRotation, nextCrossRotation, lastInterpolationFactor);
-
-                pos = Vector4.Lerp(crossPos, pos, crossFadeBlendFactorGPUSkinningFrame);
-                rotation = Quaternion.Slerp(crossRotation, rotation, crossFadeBlendFactorGPUSkinningFrame);
-
-                jointTransform.localPosition = pos;
-                jointTransform.localRotation = rotation;
-                scaleCache.x = pos.w;
-                scaleCache.y = pos.w;
-                scaleCache.z = pos.w;
+                
+                Matrix4x4 matrix4X4 = GetCrossFadeMatrixPalette(
+                    joint.BoneIndex, 
+                    crossMatrices,
+                    nextCrossMatrices,
+                    matrices,
+                    nextMatrices,
+                    lastInterpolationFactor,
+                    InterpolationFactor,
+                    crossFadeBlendFactor);
+                
+                jointTransform.localPosition = GPUSkinningUtil.GetPositionFromMatrix(matrix4X4);
+                jointTransform.localRotation = GPUSkinningUtil.GetQuaternionFromMatrix(matrix4X4);
+                float scale = GPUSkinningUtil.GetScaleFromMatrix(matrix4X4);
+                scaleCache.x = scale;
+                scaleCache.y = scale;
+                scaleCache.z = scale;
                 jointTransform.localScale = scaleCache;
             }
             else

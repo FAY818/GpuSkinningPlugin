@@ -213,7 +213,7 @@ inline float4x4 getMatrixPalette(float frameStartIndex, float nextFrameStartInde
 	float4 real = getInterpolationReal(frameStartIndex, nextFrameStartIndex, curBoneIndex, false);
 	float4x4 curMat = DualQuaternionToMatrix(dual, real);
 	float4x4 matrixPalette = curMat;
-	float parentBoneIndex;
+	int parentBoneIndex;
 
 	int loopCount = 0;
 	while (true)

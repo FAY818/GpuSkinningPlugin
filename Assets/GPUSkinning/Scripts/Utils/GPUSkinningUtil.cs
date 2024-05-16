@@ -237,4 +237,34 @@ public class GPUSkinningUtil
         dist = Mathf.Abs(dist);
         return dist < epsilon;
     }
+
+    private static Vector3 uniformScale = new Vector3();
+    public static Matrix4x4 DualQuaternionToMatrix(Quaternion quaternion, Vector4 pos)
+    {
+        uniformScale.x = pos.w;
+        uniformScale.y = pos.w;
+        uniformScale.z = pos.w;
+        Matrix4x4 matrix = Matrix4x4.TRS(pos, quaternion, uniformScale);
+        return matrix;
+    }
+
+    public static Vector3 GetPositionFromMatrix(Matrix4x4 matrix4X4)
+    {
+        Vector3 pos = matrix4X4.GetColumn(3);
+        return pos;
+    }
+    
+    public static Quaternion GetQuaternionFromMatrix(Matrix4x4 matrix4X4)
+    {
+        Quaternion rotation = Quaternion.LookRotation(matrix4X4.GetColumn(2), matrix4X4.GetColumn(1));
+        return rotation;
+    }
+    
+    public static float GetScaleFromMatrix(Matrix4x4 matrix4X4)
+    {
+        float scale = Vector3.Magnitude(matrix4X4.GetColumn(0));
+        return scale;
+    }
+    
+    
 }
