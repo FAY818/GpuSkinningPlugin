@@ -90,7 +90,7 @@ ENDCG
 		#pragma multi_compile ROOTON_BLENDOFF ROOTON_BLENDON_CROSSFADEROOTON ROOTON_BLENDON_CROSSFADEROOTOFF ROOTOFF_BLENDOFF ROOTOFF_BLENDON_CROSSFADEROOTON ROOTOFF_BLENDON_CROSSFADEROOTOFF
 
         #include "Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc"
-		#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
+		//#include "Assets/GPUSkinning/Resources/GPUSkinningInclude.cginc"
 
         void myvert (inout appdata_vert v, out Input o) 
         {
@@ -102,11 +102,11 @@ ENDCG
 				float4 normal = float4(v.normal, 0);
 				float4 tangent = float4(v.tangent.xyz, 0);
 
-				float4 pos = skin2(v.vertex, v.uv1, v.uv2);
-				normal = skin2(normal, v.uv1, v.uv2);
-				tangent = skin2(tangent, v.uv1, v.uv2);
-
-				v.vertex = pos;
+				// float4 pos = skin2(v.vertex, v.uv1, v.uv2);
+				// normal = skin2(normal, v.uv1, v.uv2);
+				// tangent = skin2(tangent, v.uv1, v.uv2);
+				//
+				// v.vertex = pos;
 				v.normal = normal.xyz;
 				v.tangent = float4(tangent.xyz, v.tangent.w);
 		   }
