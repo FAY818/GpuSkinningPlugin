@@ -10,9 +10,13 @@ public class GPUSkinningAnimation : ScriptableObject
 
     public string name = null;
 
+    public GPUSkinningAnimType gpuSkinningAnimType = GPUSkinningAnimType.Skeleton;
+    
     public GPUSkinningBone[] bones = null;
 
     public int skinningBoneNum = 0;
+
+    public int skinningVertexNum = 0;
     
     [HideInInspector]
     public GPUSkinningBone[] skinningBones = null; 

@@ -265,6 +265,47 @@ public class GPUSkinningUtil
         float scale = Vector3.Magnitude(matrix4X4.GetColumn(0));
         return scale;
     }
-    
-    
+
+    public static Matrix4x4 MatrixMulFloat(Matrix4x4 matrix, float val)
+    {
+        matrix.m00 *= val;
+        matrix.m01 *= val;
+        matrix.m02 *= val;
+        matrix.m03 *= val;
+        matrix.m10 *= val;
+        matrix.m11 *= val;
+        matrix.m12 *= val;
+        matrix.m13 *= val;
+        matrix.m20 *= val;
+        matrix.m21 *= val;
+        matrix.m22 *= val;
+        matrix.m23 *= val;
+        matrix.m30 *= val;
+        matrix.m31 *= val;
+        matrix.m32 *= val;
+        matrix.m33 *= val;
+        return matrix;
+    }
+
+    public static Matrix4x4 MatrixAddMatrix(Matrix4x4 matrix1, Matrix4x4 matrix2)
+    {
+        Matrix4x4 matrix = new Matrix4x4();
+        matrix.m00 = matrix1.m00 + matrix2.m00;
+        matrix.m01 = matrix1.m01 + matrix2.m01;
+        matrix.m02 = matrix1.m02 + matrix2.m02;
+        matrix.m03 = matrix1.m03 + matrix2.m03;
+        matrix.m10 = matrix1.m10 + matrix2.m10;
+        matrix.m11 = matrix1.m11 + matrix2.m11;
+        matrix.m12 = matrix1.m12 + matrix2.m12;
+        matrix.m13 = matrix1.m13 + matrix2.m13;
+        matrix.m20 = matrix1.m20 + matrix2.m20;
+        matrix.m21 = matrix1.m21 + matrix2.m21;
+        matrix.m22 = matrix1.m22 + matrix2.m22;
+        matrix.m23 = matrix1.m23 + matrix2.m23;
+        matrix.m30 = matrix1.m30 + matrix2.m30;
+        matrix.m31 = matrix1.m31 + matrix2.m31;
+        matrix.m32 = matrix1.m32 + matrix2.m32;
+        matrix.m33 = matrix1.m33 + matrix2.m33;
+        return matrix;
+    }
 }
