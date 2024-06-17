@@ -17,7 +17,7 @@ using UnityEditor;
 public class GPUSkinningSampler : MonoBehaviour 
 {
 	
-#if UNITY_EDITOR
+//#if UNITY_EDITOR
 	#region Properties
 	[HideInInspector]
     [SerializeField]
@@ -77,7 +77,11 @@ public class GPUSkinningSampler : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-	public GPUSkinningQuality skinQuality = GPUSkinningQuality.Bone2;
+    public GPUSkinningAnimType animType = GPUSkinningAnimType.Skeleton;
+
+    [HideInInspector]
+    [SerializeField]
+	public GPUSkinningQuality skinQuality = GPUSkinningQuality.Bone4;
 
     [HideInInspector]
     [SerializeField]
@@ -235,7 +239,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
 					string savedAnimPath = dir + "/GPUSKinning_Anim_" + animName + ".asset";
                     SetSthAboutTexture(gpuSkinningAnimation);
-                    SetBindBoneTexture(gpuSkinningAnimation);
+                    SetBindBoneTexture(gpuSkinningAnimationsssssssssssssssssss);
                     EditorUtility.SetDirty(gpuSkinningAnimation);
                     if (anim != gpuSkinningAnimation)
                     {

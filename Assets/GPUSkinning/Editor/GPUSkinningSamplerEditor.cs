@@ -141,6 +141,9 @@ public class GPUSkinningSamplerEditor : Editor
                 EditorGUILayout.Space();
                 GUI.enabled = true && guiEnabled;
 
+                // 绘制下拉栏
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("animType"), new GUIContent("Anim Type"));
+                
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("skinQuality"), new GUIContent("Quality"));
 
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("shaderType"), new GUIContent("Shader Type"));
