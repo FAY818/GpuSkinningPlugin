@@ -2,35 +2,36 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System.Reflection;
-using System.Collections;
 using System.Collections.Generic;
 
 [CustomEditor(typeof(GPUSkinningSampleSetting))]
 public class GPUSkinningSampleSettingEditor : Editor 
 {
-	private GPUSkinningAnimation anim = null;
+    #region Properties
 
-	private Mesh mesh = null;
+    private GPUSkinningAnimation anim = null;
 
-	private Material mtrl = null;
+    private Mesh mesh = null;
+
+    private Material mtrl = null;
 
     private TextAsset texture = null;
 
-    private TextAsset textureBind = null; // 绑定纹理在骨骼动画模式中启用
+    private TextAsset textureBind = null;
 
-	private RenderTexture rt = null;
+    private RenderTexture rt = null;
 
     private RenderTexture rtGamma = null;
 
     private Material linearToGammeMtrl = null;
 
-	private Camera cam = null;
+    private Camera cam = null;
 
     private GPUSkinningPlayerMono preview = null;
 
     private int previewClipIndex = 0;
 
-    private float time = 0;
+    private float time = 0; // 运行时间
 
     private Vector3 camLookAtOffset = Vector3.zero;
 
@@ -63,43 +64,259 @@ public class GPUSkinningSampleSettingEditor : Editor
     private bool isAnimEventsFoldout = true;
 
     private bool rootMotionEnabled = false;
-
+    
     private GameObject[] gridGos = null;
 
     private Material gridMtrl = null;
 
     private bool guiEnabled = false;
 
+    private GPUSkinningAnimType animType;
+
+    #endregion
+
+    #region Life
+
+    private void Awake()
+    {
+        EditorApplication.update += UpdateHandler;
+        time = Time.realtimeSinceStartup;
+        
+        LoadAssets();
+        
+        // 读取编辑器默认折叠配置
+        isBoundsFoldout = PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_BOUNDS, true);
+        isJointsFoldout =  PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_Joints, true);
+        isRootMotionFoldout =  PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_ROOTMOTION, true);
+        isLODFoldout =  PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_LOD, true);
+        isAnimEventsFoldout =  PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_ANIMEVENTS, true);
+
+        rootMotionEnabled = true;
+    }
+
+    private void LoadAssets()
+    {
+        GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
+        if (animType == sampleSetting.animType)
+        {
+            return;
+        }
+        animType = sampleSetting.animType;
+        
+        switch (animType)
+        {
+            case GPUSkinningAnimType.Skeleton:
+                LoadSkeletonAssets();
+                break;
+            case GPUSkinningAnimType.Vertices:
+                LoadVertexAssets();
+                break;
+            default:
+                Debug.LogError("Unsupported anim type.");
+                break;
+        }
+    }
+
+    private void LoadSkeletonAssets()
+    {
+        if (!Application.isPlaying)
+        {
+            Object obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_ANIM_PATH));
+            if (obj != null && obj is GPUSkinningAnimation)
+            {
+                serializedObject.FindProperty("anim").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MESH_PATH));
+            if (obj != null && obj is Mesh)
+            {
+                serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MTRL_PATH));
+            if (obj != null && obj is Material)
+            {
+                serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_SHADER_PATH));
+            if (obj != null && obj is Shader)
+            {
+                serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
+            }
+            
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTURE_PATH));
+            if(obj != null && obj is TextAsset)
+            {
+                serializedObject.FindProperty("texture").objectReferenceValue = obj;
+            }
+            
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH));
+            if(obj != null && obj is TextAsset)
+            {
+                serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_ANIM_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MESH_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MTRL_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_SHADER_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTURE_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTUREBIND_PATH);
+        }
+    }
+    
+    private void LoadVertexAssets()
+    {
+        if (!Application.isPlaying)
+        {
+            Object obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_ANIM_VERTEX_PATH));
+            if (obj != null && obj is GPUSkinningAnimation)
+            {
+                serializedObject.FindProperty("anim").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH));
+            if (obj != null && obj is Mesh)
+            {
+                serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MTRL_VERTEX_PATH));
+            if (obj != null && obj is Material)
+            {
+                serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
+            }
+
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_SHADER_VERTEX_PATH));
+            if (obj != null && obj is Shader)
+            {
+                serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
+            }
+            
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH));
+            if(obj != null && obj is TextAsset)
+            {
+                serializedObject.FindProperty("texture").objectReferenceValue = obj;
+            }
+            
+            serializedObject.ApplyModifiedProperties();
+            
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_ANIM_VERTEX_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MESH_VERTEX_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MTRL_VERTEX_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_SHADER_VERTEX_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH);
+        }
+    }
+
     public override void OnInspectorGUI ()
-	{
-		GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
-		if(sampleSetting == null)
-		{
-			return;
-		}
+    {
+        GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
+        if(sampleSetting == null)
+        {
+            return;
+        }
 
         sampleSetting.MappingAnimationClips();
+        
+        OnGUI_Sampler(sampleSetting); // 采样
 
-        OnGUI_Sampler(sampleSetting);
-
-        OnGUI_Preview(sampleSetting);
+        OnGUI_Preview(sampleSetting); // 预览
 
         if (preview != null)
         {
             Repaint();
         }
-	}
+    }
+
+    private void OnDestroy()
+    {
+        EditorApplication.update -= UpdateHandler;
+        EditorUtility.ClearProgressBar();
+        DestroyPreview();
+    }
+    
+    private void UpdateHandler()
+    {
+        ///////////////// 检测 /////////////////
+        if(preview != null && EditorApplication.isPlaying) // 运行中
+        {
+            DestroyPreview();
+            return;
+        }
+
+        GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
+
+        if (EditorApplication.isCompiling) // 编译中
+        {
+            if (Selection.activeGameObject == sampleSetting.gameObject)
+            {
+                Selection.activeGameObject = null;
+                return; 
+            }
+        } 
+        
+        ///////////////// 预览 /////////////////
+        float deltaTime = Time.realtimeSinceStartup - time;
+        
+        if(preview != null)
+        {
+            PreviewDrawBounds();
+            PreviewDrawArrows();
+            PreviewDrawGrid();
+
+            preview.Update_Editor(deltaTime);
+            PreviewInteraction_CameraRestriction();
+            cam.Render();
+        }
+
+        time = Time.realtimeSinceStartup;
+
+        ///////////////// 采样 /////////////////
+        if(!sampleSetting.isSampling && sampleSetting.IsSamplingProgress()) // 不在采样中
+        {
+            if (++sampleSetting.samplingClipIndex < sampleSetting.animClips.Length)
+            {
+                // 开始下一个动画采样
+                sampleSetting.StartSample();
+            }
+            else
+            {
+                // 采样结束
+                sampleSetting.EndSample();
+                EditorApplication.isPlaying = false;
+                EditorUtility.ClearProgressBar();
+                LockInspector(false);
+            }
+        }
+        
+        if (sampleSetting.isSampling) 
+        {
+            string msg = sampleSetting.animClip.name + "(" + (sampleSetting.samplingClipIndex + 1) + "/" + sampleSetting.animClips.Length +")";
+            EditorUtility.DisplayProgressBar("Sampling, do not stop playing", msg, (float)(sampleSetting.samplingFrameIndex + 1) / sampleSetting.samplingTotalFrams);
+        }
+    }
+    
+    #endregion
+    
+    #region Sampler
 
     private void OnGUI_Sampler(GPUSkinningSampleSetting sampleSetting)
     {
-        guiEnabled = !Application.isPlaying;
+        guiEnabled = !Application.isPlaying; // 编辑模式下才允许编辑
+        
+        LoadAssets();
 
         BeginBox();
         {
             GUI.enabled = guiEnabled;
+            
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("animName"), new GUIContent("Animation Name"));
 
+                // 持久化数据，不可编辑
                 GUI.enabled = false;
                 EditorGUILayout.Space();
                 EditorGUILayout.BeginHorizontal();
@@ -132,16 +349,22 @@ public class GPUSkinningSampleSettingEditor : Editor
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("texture"), new GUIContent());
                 }
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.BeginHorizontal();
+                
+                // 骨骼动画需要绑定姿势矩阵贴图
+                if (animType == GPUSkinningAnimType.Skeleton)
                 {
-                    GUILayout.FlexibleSpace();
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty("textureBind"), new GUIContent());
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        GUILayout.FlexibleSpace();
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("textureBind"), new GUIContent());
+                    }
+                    EditorGUILayout.EndHorizontal();
                 }
-                EditorGUILayout.EndHorizontal();
+                
                 EditorGUILayout.Space();
                 GUI.enabled = true && guiEnabled;
 
-                // 绘制下拉栏
+                // 下拉栏
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("animType"), new GUIContent("Anim Type"));
                 
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("skinQuality"), new GUIContent("Quality"));
@@ -151,11 +374,12 @@ public class GPUSkinningSampleSettingEditor : Editor
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
-
+                
                 OnGUI_AnimClips(sampleSetting);
 
                 OnGUI_LOD(sampleSetting);
             }
+            
             GUI.enabled = true;
 
             if (GUILayout.Button("Step1: Play Scene"))
@@ -184,33 +408,40 @@ public class GPUSkinningSampleSettingEditor : Editor
         }
         EndBox();
     }
-
-    private SerializedProperty animClips_array_size_sp = null;
+    
+    // 声明属性数组的数量
+    private SerializedProperty animClips_array_size_sp = null; 
     private SerializedProperty wrapModes_array_size_sp = null;
     private SerializedProperty fpsList_array_size_sp = null;
     private SerializedProperty rootMotionEnabled_array_size_sp = null;
     private SerializedProperty individualDifferenceEnabled_array_size_sp = null;
+    
     private List<SerializedProperty> animClips_item_sp = null;
     private List<SerializedProperty> wrapModes_item_sp = null;
     private List<SerializedProperty> fpsList_item_sp = null;
     private List<SerializedProperty> rootMotionEnabled_item_sp = null;
     private List<SerializedProperty> individualDifferenceEnabled_item_sp = null;
+    
     private int animClips_count = 0;
     private void OnGUI_AnimClips(GPUSkinningSampleSetting sampleSetting)
     {
+        // 重置
         System.Action ResetItemSp = () =>
         {
+            // 清除
             animClips_item_sp.Clear();
             wrapModes_item_sp.Clear();
             fpsList_item_sp.Clear();
             rootMotionEnabled_item_sp.Clear();
             individualDifferenceEnabled_item_sp.Clear();
 
+            // 根据动画数量初始化
             wrapModes_array_size_sp.intValue = animClips_array_size_sp.intValue;
             fpsList_array_size_sp.intValue = animClips_array_size_sp.intValue;
             rootMotionEnabled_array_size_sp.intValue = animClips_array_size_sp.intValue;
             individualDifferenceEnabled_array_size_sp.intValue = animClips_array_size_sp.intValue;
 
+            // 填充数据
             for (int i = 0; i < animClips_array_size_sp.intValue; i++)
             {
                 animClips_item_sp.Add(serializedObject.FindProperty(string.Format("animClips.Array.data[{0}]", i)));
@@ -223,11 +454,14 @@ public class GPUSkinningSampleSettingEditor : Editor
             animClips_count = animClips_item_sp.Count;
         };
 
+        // 赋值属性数组的数量
         if (animClips_array_size_sp == null) animClips_array_size_sp = serializedObject.FindProperty("animClips.Array.size");
         if (wrapModes_array_size_sp == null) wrapModes_array_size_sp = serializedObject.FindProperty("wrapModes.Array.size");
         if (fpsList_array_size_sp == null) fpsList_array_size_sp = serializedObject.FindProperty("fpsList.Array.size");
         if (rootMotionEnabled_array_size_sp == null) rootMotionEnabled_array_size_sp = serializedObject.FindProperty("rootMotionEnabled.Array.size");
         if (individualDifferenceEnabled_array_size_sp == null) individualDifferenceEnabled_array_size_sp = serializedObject.FindProperty("individualDifferenceEnabled.Array.size");
+        
+        // 初始化属性数组
         if(animClips_item_sp == null)
         {
             animClips_item_sp = new List<SerializedProperty>();
@@ -326,14 +560,15 @@ public class GPUSkinningSampleSettingEditor : Editor
                             }
                         }
                         EditorGUILayout.EndHorizontal();
+                        
                         for (int i = 0; i < no; i++)
                         {
-                            var prop = animClips_item_sp[i];
+                            var prop1 = animClips_item_sp[i];
                             var prop2 = wrapModes_item_sp[i];
                             var prop3 = fpsList_item_sp[i];
                             var prop4 = rootMotionEnabled_item_sp[i];
                             var prop5 = individualDifferenceEnabled_item_sp[i];
-                            if (prop != null)
+                            if (prop1 != null)
                             {
                                 if(j == -1)
                                 {
@@ -351,31 +586,31 @@ public class GPUSkinningSampleSettingEditor : Editor
                                 if(j == 2)
                                 {
                                     GUI.enabled = sampleSetting.IsAnimatorOrAnimation() && guiEnabled;
-                                    EditorGUILayout.PropertyField(prop, new GUIContent());
+                                    EditorGUILayout.PropertyField(prop1, new GUIContent());
                                     GUI.enabled = true && guiEnabled;
                                 }
                                 // 以上功能暂不开启
                                 if(j == 3)
                                 {
-                                    // EditorGUILayout.BeginHorizontal();
-                                    // GUILayout.FlexibleSpace();
-                                    // prop4.boolValue = GUILayout.Toggle(prop4.boolValue, string.Empty);
-                                    // GUILayout.FlexibleSpace();
-                                    // EditorGUILayout.EndHorizontal();
+                                    EditorGUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    prop4.boolValue = GUILayout.Toggle(prop4.boolValue, string.Empty);
+                                    GUILayout.FlexibleSpace();
+                                    EditorGUILayout.EndHorizontal();
                                 }
                                 if (j == 4)
                                 {
-                                    // EditorGUILayout.BeginHorizontal();
-                                    // GUILayout.FlexibleSpace();
-                                    // GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
-                                    // prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
-                                    // if(!GUI.enabled)
-                                    // {
-                                    //     prop5.boolValue = false;
-                                    // }
-                                    // GUI.enabled = true && guiEnabled;
-                                    // GUILayout.FlexibleSpace();
-                                    // EditorGUILayout.EndHorizontal();
+                                    EditorGUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
+                                    prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
+                                    if(!GUI.enabled)
+                                    {
+                                        prop5.boolValue = false;
+                                    }
+                                    GUI.enabled = true && guiEnabled;
+                                    GUILayout.FlexibleSpace();
+                                    EditorGUILayout.EndHorizontal();
                                 }
                             }
                         }
@@ -388,6 +623,219 @@ public class GPUSkinningSampleSettingEditor : Editor
         EndBox();
     }
 
+    private void OnGUI_LOD(GPUSkinningSampleSetting sampleSetting)
+    {
+        BeginBox();
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical();
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.Space();
+                    isLODFoldout = EditorGUILayout.Foldout(isLODFoldout, isLODFoldout ? string.Empty : "LOD");
+                    PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_LOD, isLODFoldout);
+                    GUILayout.FlexibleSpace();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                if (isLODFoldout)
+                {
+                    OnGUI_LODMeshes(sampleSetting);
+                }
+            }
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+        }
+        EndBox();
+    }
+     
+    private void OnGUI_LODMeshes(GPUSkinningSampleSetting sampleSetting)
+    {
+        SerializedProperty sizeSP = serializedObject.FindProperty("lodMeshes.Array.size");
+        SerializedProperty dist_sizeSP = serializedObject.FindProperty("lodDistances.Array.size");
+
+        sizeSP.intValue = EditorGUILayout.IntField("Size", sizeSP.intValue);
+        dist_sizeSP.intValue = sizeSP.intValue;
+
+        EditorGUILayout.BeginVertical();
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.Label("LOD Distance");
+            }
+            EditorGUILayout.EndHorizontal();
+
+            for(int i = 0; i < sizeSP.intValue; ++i)
+            {
+                EditorGUILayout.BeginHorizontal();
+                {
+                    EditorGUI.BeginChangeCheck();
+                    EditorGUILayout.ObjectField(serializedObject.FindProperty("lodMeshes.Array.data[" + i + "]"), new GUIContent("LOD" + (i + 1)));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        ApplySamplerModification(sampleSetting);
+                    }
+
+                    EditorGUI.BeginChangeCheck();
+                    SerializedProperty distSP = serializedObject.FindProperty("lodDistances.Array.data[" + i + "]");
+                    distSP.floatValue = EditorGUILayout.FloatField(distSP.floatValue, GUILayout.Width(80));
+                    if(EditorGUI.EndChangeCheck())
+                    {
+                        ApplySamplerModification(sampleSetting);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            OnGUI_LODDistancesChecking(sampleSetting);
+        }
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("sphereRadius"));
+    }
+
+    private void OnGUI_LODDistancesChecking(GPUSkinningSampleSetting sampleSetting)
+    {
+        if(!LodDistancesIsLegal(sampleSetting))
+        {
+            EditorGUILayout.HelpBox("Error: LOD distances must be sorted in ascending order.", MessageType.Error);
+        }
+    }
+    
+    /// <summary>
+    /// 检测Lod距离设置的正确性（是否递增）
+    /// </summary>
+    private bool LodDistancesIsLegal(GPUSkinningSampleSetting sampleSetting)
+    {
+        if(sampleSetting.lodDistances == null)
+        {
+            return true;
+        }
+
+        float value = float.MinValue;
+        bool isLegal = true;
+        for (int i = 0; i < sampleSetting.lodDistances.Length; ++i)
+        {
+            if (sampleSetting.lodDistances[i] <= value)
+            {
+                isLegal = false;
+                break;
+            }
+            value = sampleSetting.lodDistances[i];
+        }
+
+        return isLegal;
+    }
+    
+    #endregion
+
+    #region Preview
+    
+    private void DestroyPreview()
+    {
+        if (rt != null)
+        {
+            cam.targetTexture = null;
+
+            DestroyImmediate(linearToGammeMtrl);
+            linearToGammeMtrl = null;
+
+            DestroyImmediate(rt);
+            rt = null;
+
+            if (rtGamma != null)
+            {
+                DestroyImmediate(rtGamma);
+                rtGamma = null;
+            }
+
+            DestroyImmediate(cam.gameObject);
+            cam = null;
+
+            DestroyImmediate(preview.gameObject);
+            preview = null;
+
+            if (boundsGos != null)
+            {
+                foreach (GameObject boundsGo in boundsGos)
+                {
+                    DestroyImmediate(boundsGo);
+                }
+                boundsGos = null;
+            }
+
+            if (arrowGos != null)
+            {
+                foreach (GameObject arrowGo in arrowGos)
+                {
+                    DestroyImmediate(arrowGo);
+                }
+                arrowGos = null;
+
+                foreach (Material mtrl in arrowMtrls)
+                {
+                    DestroyImmediate(mtrl);
+                }
+                arrowMtrls = null;
+            }
+
+            if(gridGos != null)
+            {
+                foreach(GameObject gridGo in gridGos)
+                {
+                    DestroyImmediate(gridGo);
+                }
+                gridGos = null;
+
+                DestroyImmediate(gridMtrl);
+                gridMtrl = null;
+            }
+
+            DestroyImmediate(boundsMtrl);
+            boundsMtrl = null;
+        }
+    }
+    
+    #endregion
+
+    #region Common
+
+    /// <summary>
+    /// 绘制垂直布局块
+    /// </summary>
+    private void BeginBox()
+    {
+        EditorGUILayout.BeginVertical(GUI.skin.GetStyle("Box"));
+        EditorGUILayout.Space();
+    }
+
+    /// <summary>
+    /// 结束垂直布局块
+    /// </summary>
+    private void EndBox()
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.EndVertical();
+    }
+
+    private int lastIndentLevel = 0;
+    private void BeginIndentLevel(int indentLevel)
+    {
+        lastIndentLevel = EditorGUI.indentLevel;
+        EditorGUI.indentLevel = indentLevel;
+    }
+
+    private void EndIndentLevel()
+    {
+        EditorGUI.indentLevel = lastIndentLevel;
+    }
+    
+    #endregion
+    
     private void OnGUI_Preview(GPUSkinningSampleSetting sampleSetting)
     {
         BeginBox();
@@ -521,7 +969,7 @@ public class GPUSkinningSampleSettingEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
                         isAnimEventsFoldout = EditorGUILayout.Foldout(isAnimEventsFoldout, isAnimEventsFoldout ? string.Empty : "Events");
-                        SetEditorPrefsBool("isAnimEventsFoldout", isAnimEventsFoldout);
+                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_ANIMEVENTS, isAnimEventsFoldout);
                         GUILayout.FlexibleSpace();
                     }
                     EditorGUILayout.EndHorizontal();
@@ -771,7 +1219,7 @@ public class GPUSkinningSampleSettingEditor : Editor
                             EditorGUILayout.Space();
                             EditorGUILayout.Space();
                             isRootMotionFoldout = EditorGUILayout.Foldout(isRootMotionFoldout, isRootMotionFoldout ? string.Empty : "Root Motion");
-                            SetEditorPrefsBool("isRootMotionFoldout", isRootMotionFoldout);
+                            PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_ROOTMOTION, isRootMotionFoldout);
                             GUILayout.FlexibleSpace();
                         }
                         EditorGUILayout.EndHorizontal();
@@ -853,7 +1301,7 @@ public class GPUSkinningSampleSettingEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
                         isBoundsFoldout = EditorGUILayout.Foldout(isBoundsFoldout, isBoundsFoldout ? string.Empty : "Bounds");
-                        SetEditorPrefsBool("isBoundsFoldout", isBoundsFoldout);
+                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_BOUNDS, isBoundsFoldout);
                         GUILayout.FlexibleSpace();
                     }
                     EditorGUILayout.EndHorizontal();
@@ -928,112 +1376,7 @@ public class GPUSkinningSampleSettingEditor : Editor
         }
         EditorGUILayout.EndHorizontal();
     }
-
-    private void OnGUI_LOD(GPUSkinningSampleSetting sampleSetting)
-    {
-        BeginBox();
-        {
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginVertical();
-            {
-                EditorGUILayout.BeginHorizontal();
-                {
-                    EditorGUILayout.Space();
-                    EditorGUILayout.Space();
-                    isLODFoldout = EditorGUILayout.Foldout(isLODFoldout, isLODFoldout ? string.Empty : "LOD");
-                    SetEditorPrefsBool("isLODFoldout", isLODFoldout);
-                    GUILayout.FlexibleSpace();
-                }
-                EditorGUILayout.EndHorizontal();
-
-                if (isLODFoldout)
-                {
-                    OnGUI_LODMeshes(sampleSetting);
-                }
-            }
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.Space();
-        }
-        EndBox();
-    }
-     
-    private void OnGUI_LODMeshes(GPUSkinningSampleSetting sampleSetting)
-    {
-        SerializedProperty sizeSP = serializedObject.FindProperty("lodMeshes.Array.size");
-        SerializedProperty dist_sizeSP = serializedObject.FindProperty("lodDistances.Array.size");
-
-        sizeSP.intValue = EditorGUILayout.IntField("Size", sizeSP.intValue);
-        dist_sizeSP.intValue = sizeSP.intValue;
-
-        EditorGUILayout.BeginVertical();
-        {
-            EditorGUILayout.BeginHorizontal();
-            {
-                GUILayout.FlexibleSpace();
-                GUILayout.Label("LOD Distance");
-            }
-            EditorGUILayout.EndHorizontal();
-
-            for(int i = 0; i < sizeSP.intValue; ++i)
-            {
-                EditorGUILayout.BeginHorizontal();
-                {
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.ObjectField(serializedObject.FindProperty("lodMeshes.Array.data[" + i + "]"), new GUIContent("LOD" + (i + 1)));
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        ApplySamplerModification(sampleSetting);
-                    }
-
-                    EditorGUI.BeginChangeCheck();
-                    SerializedProperty distSP = serializedObject.FindProperty("lodDistances.Array.data[" + i + "]");
-                    distSP.floatValue = EditorGUILayout.FloatField(distSP.floatValue, GUILayout.Width(80));
-                    if(EditorGUI.EndChangeCheck())
-                    {
-                        ApplySamplerModification(sampleSetting);
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-
-            OnGUI_LODDistancesChecking(sampleSetting);
-        }
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.Space();
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("sphereRadius"));
-    }
-
-    private void OnGUI_LODDistancesChecking(GPUSkinningSampleSetting sampleSetting)
-    {
-        if(!LodDistancesIsLegal(sampleSetting))
-        {
-            EditorGUILayout.HelpBox("Error: LOD distances must be sorted in ascending order.", MessageType.Error);
-        }
-    }
-
-    private bool LodDistancesIsLegal(GPUSkinningSampleSetting sampleSetting)
-    {
-        if(sampleSetting.lodDistances == null)
-        {
-            return true;
-        }
-
-        float value = float.MinValue;
-        bool isLegal = true;
-        for (int i = 0; i < sampleSetting.lodDistances.Length; ++i)
-        {
-            if (sampleSetting.lodDistances[i] <= value)
-            {
-                isLegal = false;
-                break;
-            }
-            value = sampleSetting.lodDistances[i];
-        }
-
-        return isLegal;
-    }
-
+    
     private void OnGUI_Joints()
     {
         EditorGUILayout.BeginHorizontal();
@@ -1049,7 +1392,7 @@ public class GPUSkinningSampleSettingEditor : Editor
                         EditorGUILayout.Space();
                         EditorGUILayout.Space();
                         isJointsFoldout = EditorGUILayout.Foldout(isJointsFoldout, isJointsFoldout ? string.Empty : "Joints");
-                        SetEditorPrefsBool("isJointsFoldout", isJointsFoldout);
+                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_Joints, isJointsFoldout);
                         GUILayout.FlexibleSpace();
                     }
                     EditorGUILayout.EndHorizontal();
@@ -1405,66 +1748,7 @@ public class GPUSkinningSampleSettingEditor : Editor
             EditorSceneManager.SaveOpenScenes();
         }
     }
-
-    private void UpdateHandler()
-    {
-        if(preview != null && EditorApplication.isPlaying)
-        {
-            DestroyPreview();
-            return;
-        }
-
-        GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
-
-        if (EditorApplication.isCompiling)
-        {
-            if (Selection.activeGameObject == sampleSetting.gameObject)
-            {
-                Selection.activeGameObject = null;
-                return; 
-            }
-        }
-
-        float deltaTime = Time.realtimeSinceStartup - time;
-        
-        if(preview != null)
-        {
-            PreviewDrawBounds();
-            PreviewDrawArrows();
-            PreviewDrawGrid();
-
-            preview.Update_Editor(deltaTime);
-            PreviewInteraction_CameraRestriction();
-            cam.Render();
-        }
-
-        time = Time.realtimeSinceStartup;
-
-        if(!sampleSetting.isSampling && sampleSetting.IsSamplingProgress())
-        {
-            // 当前不在采样并在采样的过程中
-            if (++sampleSetting.samplingClipIndex < sampleSetting.animClips.Length)
-            {
-                // 开始下一个动画采样
-                sampleSetting.StartSample();
-            }
-            else
-            {
-                // 采样结束
-                sampleSetting.EndSample();
-                EditorApplication.isPlaying = false;
-                EditorUtility.ClearProgressBar();
-                LockInspector(false);
-            }
-        }
-        
-        if (sampleSetting.isSampling)
-        {
-            string msg = sampleSetting.animClip.name + "(" + (sampleSetting.samplingClipIndex + 1) + "/" + sampleSetting.animClips.Length +")";
-            EditorUtility.DisplayProgressBar("Sampling, DONOT stop playing", msg, (float)(sampleSetting.samplingFrameIndex + 1) / sampleSetting.samplingTotalFrams);
-        }
-    }
-
+    
     private void LockInspector(bool isLocked)
     {
         System.Type type = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.InspectorWindow");
@@ -1484,170 +1768,5 @@ public class GPUSkinningSampleSettingEditor : Editor
         {
             rect = guiRect;
         }
-    }
-
-    private void DestroyPreview()
-    {
-        if (rt != null)
-        {
-            cam.targetTexture = null;
-
-            DestroyImmediate(linearToGammeMtrl);
-            linearToGammeMtrl = null;
-
-            DestroyImmediate(rt);
-            rt = null;
-
-            if (rtGamma != null)
-            {
-                DestroyImmediate(rtGamma);
-                rtGamma = null;
-            }
-
-            DestroyImmediate(cam.gameObject);
-            cam = null;
-
-            DestroyImmediate(preview.gameObject);
-            preview = null;
-
-            if (boundsGos != null)
-            {
-                foreach (GameObject boundsGo in boundsGos)
-                {
-                    DestroyImmediate(boundsGo);
-                }
-                boundsGos = null;
-            }
-
-            if (arrowGos != null)
-            {
-                foreach (GameObject arrowGo in arrowGos)
-                {
-                    DestroyImmediate(arrowGo);
-                }
-                arrowGos = null;
-
-                foreach (Material mtrl in arrowMtrls)
-                {
-                    DestroyImmediate(mtrl);
-                }
-                arrowMtrls = null;
-            }
-
-            if(gridGos != null)
-            {
-                foreach(GameObject gridGo in gridGos)
-                {
-                    DestroyImmediate(gridGo);
-                }
-                gridGos = null;
-
-                DestroyImmediate(gridMtrl);
-                gridMtrl = null;
-            }
-
-            DestroyImmediate(boundsMtrl);
-            boundsMtrl = null;
-        }
-    }
-
-    private void Awake()
-    {
-        EditorApplication.update += UpdateHandler;
-        time = Time.realtimeSinceStartup;
-
-        if (!Application.isPlaying)
-        {
-            Object obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_ANIM_PATH));
-            if (obj != null && obj is GPUSkinningAnimation)
-            {
-                serializedObject.FindProperty("anim").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_MESH_PATH));
-            if (obj != null && obj is Mesh)
-            {
-                serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_MTRL_PATH));
-            if (obj != null && obj is Material)
-            {
-                serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_SHADER_PATH));
-            if (obj != null && obj is Shader)
-            {
-                serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
-            }
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_TEXTURE_PATH));
-            if(obj != null && obj is TextAsset)
-            {
-                serializedObject.FindProperty("texture").objectReferenceValue = obj;
-            }
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_TEXTUREBIND_PATH));
-            if(obj != null && obj is TextAsset)
-            {
-                serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
-            }
-
-            serializedObject.ApplyModifiedProperties();
-
-            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_ANIM_PATH);
-            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_MESH_PATH);
-            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_MTRL_PATH);
-            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_SHADER_PATH);
-            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_TEXTURE_PATH);
-        }
-
-        isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);
-        isJointsFoldout = GetEditorPrefsBool("isJointsFoldout", true);
-        isRootMotionFoldout = GetEditorPrefsBool("isRootMotionFoldout", true);
-        isLODFoldout = GetEditorPrefsBool("isLODFoldout", true);
-        isAnimEventsFoldout = GetEditorPrefsBool("isAnimEventsFoldout", true);
-
-        rootMotionEnabled = true;
-    }
-
-    private bool GetEditorPrefsBool(string key, bool defaultValue)
-    {
-        return EditorPrefs.GetBool("GPUSkinningSamplerEditorPrefs_" + key, defaultValue);
-    }
-
-    private void SetEditorPrefsBool(string key, bool value)
-    {
-        EditorPrefs.SetBool("GPUSkinningSamplerEditorPrefs_" + key, value);
-    }
-
-	private void OnDestroy()
-    {
-        EditorApplication.update -= UpdateHandler;
-        EditorUtility.ClearProgressBar();
-        DestroyPreview();
-	}
-
-	private void BeginBox()
-	{
-		EditorGUILayout.BeginVertical(GUI.skin.GetStyle("Box"));
-		EditorGUILayout.Space();
-	}
-
-	private void EndBox()
-	{
-		EditorGUILayout.Space();
-		EditorGUILayout.EndVertical();
-	}
-
-    private int lastIndentLevel = 0;
-    private void BeginIndentLevel(int indentLevel)
-    {
-        lastIndentLevel = EditorGUI.indentLevel;
-        EditorGUI.indentLevel = indentLevel;
-    }
-
-    private void EndIndentLevel()
-    {
-        EditorGUI.indentLevel = lastIndentLevel;
     }
 }

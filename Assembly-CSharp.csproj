@@ -60,6 +60,7 @@
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningPlayerResources.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Enum/GPUSkinningEnum.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Sampler/GPUSkinningSamplerBase.cs" />
+     <Compile Include="Assets/GPUSkinning/Scripts/Utils/PrefsManager.cs" />
      <None Include="Assets/GPUSkinning/Resources/GPUSkinningUnlitSkin2.shader" />
      <None Include="Assets/GPUSkinning/Resources/GPUSkinningUnlitSkin1.shader" />
      <None Include="Assets/GPUSkinning/Resources/GPUSkinningSurface.cginc" />

@@ -1,7 +1,7 @@
 
 public enum GPUSkinningAnimType
 {
-    Vertices = 0,
+    Vertices,
     Skeleton
 }
 
@@ -48,4 +48,13 @@ public static class Constants
     public const string TEMP_SAVED_MESH_VERTEX_PATH = "GPUSkinning_Temp_Save_Mesh_vertex_Path";
     public const string TEMP_SAVED_SHADER_VERTEX_PATH = "GPUSkinning_Temp_Save_Shader_vertex_Path";
     public const string TEMP_SAVED_TEXTURE_VERTEX_PATH = "GPUSkinning_Temp_Save_Texture_vertex_Path";
+
+    // EditorPrefs
+    public const string EDITOR_PREFS_PREFIX = "GPUSkinningSamplerEditorPrefs_";
+    public const string EDITOR_PREFS_KEY_BOUNDS = "isBoundsFoldout";
+    public const string EDITOR_PREFS_KEY_Joints = "isJointsFoldout";
+    public const string EDITOR_PREFS_KEY_ROOTMOTION = "isRootMotionFoldout";
+    public const string EDITOR_PREFS_KEY_LOD = "isLODFoldout";
+    public const string EDITOR_PREFS_KEY_ANIMEVENTS = "isAnimEventsFoldout";
+    
 }

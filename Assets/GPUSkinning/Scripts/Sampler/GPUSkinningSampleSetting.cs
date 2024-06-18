@@ -488,6 +488,9 @@ public class GPUSkinningSampleSetting : MonoBehaviour
 
     #region Sample
 
+    /// <summary>
+    /// 开始采样，编辑器自定义脚本中通过samplingClipIndex来判定采样状态，会在UpdateHandler中检测
+    /// </summary>
     public void BeginSample()
     {
         samplingClipIndex = 0;
