@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 
-[CustomEditor(typeof(GPUSkinningSampler))]
-public class GPUSkinningSamplerEditor : Editor 
+[CustomEditor(typeof(GPUSkinningSampleSetting))]
+public class GPUSkinningSampleSettingEditor : Editor 
 {
 	private GPUSkinningAnimation anim = null;
 
@@ -16,7 +16,7 @@ public class GPUSkinningSamplerEditor : Editor
 
     private TextAsset texture = null;
 
-    private TextAsset textureBind = null;
+    private TextAsset textureBind = null; // 绑定纹理在骨骼动画模式中启用
 
 	private RenderTexture rt = null;
 
@@ -72,17 +72,17 @@ public class GPUSkinningSamplerEditor : Editor
 
     public override void OnInspectorGUI ()
 	{
-		GPUSkinningSampler sampler = target as GPUSkinningSampler;
-		if(sampler == null)
+		GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
+		if(sampleSetting == null)
 		{
 			return;
 		}
 
-        sampler.MappingAnimationClips();
+        sampleSetting.MappingAnimationClips();
 
-        OnGUI_Sampler(sampler);
+        OnGUI_Sampler(sampleSetting);
 
-        OnGUI_Preview(sampler);
+        OnGUI_Preview(sampleSetting);
 
         if (preview != null)
         {
@@ -90,7 +90,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
 	}
 
-    private void OnGUI_Sampler(GPUSkinningSampler sampler)
+    private void OnGUI_Sampler(GPUSkinningSampleSetting sampleSetting)
     {
         guiEnabled = !Application.isPlaying;
 
@@ -152,9 +152,9 @@ public class GPUSkinningSamplerEditor : Editor
 
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
 
-                OnGUI_AnimClips(sampler);
+                OnGUI_AnimClips(sampleSetting);
 
-                OnGUI_LOD(sampler);
+                OnGUI_LOD(sampleSetting);
             }
             GUI.enabled = true;
 
@@ -168,16 +168,16 @@ public class GPUSkinningSamplerEditor : Editor
             {
                 if (GUILayout.Button("Step2: Start Sample"))
                 {
-                    if (!LodDistancesIsLegal(sampler))
+                    if (!LodDistancesIsLegal(sampleSetting))
                     {
-                        GPUSkinningSampler.ShowDialog("Errors must be fixed before sampling.");
+                        GPUSkinningSampleSetting.ShowDialog("Errors must be fixed before sampling.");
                     }
                     else
                     {
                         DestroyPreview();
                         LockInspector(true);
-                        sampler.BeginSample();
-                        sampler.StartSample();
+                        sampleSetting.BeginSample();
+                        sampleSetting.StartSample();
                     }
                 }
             }
@@ -196,7 +196,7 @@ public class GPUSkinningSamplerEditor : Editor
     private List<SerializedProperty> rootMotionEnabled_item_sp = null;
     private List<SerializedProperty> individualDifferenceEnabled_item_sp = null;
     private int animClips_count = 0;
-    private void OnGUI_AnimClips(GPUSkinningSampler sampler)
+    private void OnGUI_AnimClips(GPUSkinningSampleSetting sampleSetting)
     {
         System.Action ResetItemSp = () =>
         {
@@ -240,14 +240,14 @@ public class GPUSkinningSamplerEditor : Editor
 
         BeginBox();
         {
-            if(!sampler.IsAnimatorOrAnimation())
+            if(!sampleSetting.IsAnimatorOrAnimation())
             {
                 EditorGUILayout.HelpBox("Set AnimClips with Animation Component", MessageType.Info);
             }
 
             EditorGUILayout.PrefixLabel("Sample Clips");
 
-            GUI.enabled = sampler.IsAnimatorOrAnimation() && guiEnabled;
+            GUI.enabled = sampleSetting.IsAnimatorOrAnimation() && guiEnabled;
             int no = animClips_array_size_sp.intValue;
             int no2 = wrapModes_array_size_sp.intValue;
             int no3 = fpsList_array_size_sp.intValue;
@@ -350,7 +350,7 @@ public class GPUSkinningSamplerEditor : Editor
                                 }
                                 if(j == 2)
                                 {
-                                    GUI.enabled = sampler.IsAnimatorOrAnimation() && guiEnabled;
+                                    GUI.enabled = sampleSetting.IsAnimatorOrAnimation() && guiEnabled;
                                     EditorGUILayout.PropertyField(prop, new GUIContent());
                                     GUI.enabled = true && guiEnabled;
                                 }
@@ -388,17 +388,17 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
     }
 
-    private void OnGUI_Preview(GPUSkinningSampler sampler)
+    private void OnGUI_Preview(GPUSkinningSampleSetting sampleSetting)
     {
         BeginBox();
         {
             if (GUILayout.Button("Preview/Edit"))
             {
-                anim = sampler.anim;
-                mesh = sampler.savedMesh;
-                mtrl = sampler.savedMtrl;
-                texture = sampler.texture;
-                textureBind = sampler.textureBind;
+                anim = sampleSetting.anim;
+                mesh = sampleSetting.savedMesh;
+                mtrl = sampleSetting.savedMtrl;
+                texture = sampleSetting.texture;
+                textureBind = sampleSetting.textureBind;
                 if (mesh != null)
                 {
                     bounds = mesh.bounds;
@@ -929,7 +929,7 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUILayout.EndHorizontal();
     }
 
-    private void OnGUI_LOD(GPUSkinningSampler sampler)
+    private void OnGUI_LOD(GPUSkinningSampleSetting sampleSetting)
     {
         BeginBox();
         {
@@ -948,7 +948,7 @@ public class GPUSkinningSamplerEditor : Editor
 
                 if (isLODFoldout)
                 {
-                    OnGUI_LODMeshes(sampler);
+                    OnGUI_LODMeshes(sampleSetting);
                 }
             }
             EditorGUILayout.EndVertical();
@@ -957,7 +957,7 @@ public class GPUSkinningSamplerEditor : Editor
         EndBox();
     }
      
-    private void OnGUI_LODMeshes(GPUSkinningSampler sampler)
+    private void OnGUI_LODMeshes(GPUSkinningSampleSetting sampleSetting)
     {
         SerializedProperty sizeSP = serializedObject.FindProperty("lodMeshes.Array.size");
         SerializedProperty dist_sizeSP = serializedObject.FindProperty("lodDistances.Array.size");
@@ -982,7 +982,7 @@ public class GPUSkinningSamplerEditor : Editor
                     EditorGUILayout.ObjectField(serializedObject.FindProperty("lodMeshes.Array.data[" + i + "]"), new GUIContent("LOD" + (i + 1)));
                     if (EditorGUI.EndChangeCheck())
                     {
-                        ApplySamplerModification(sampler);
+                        ApplySamplerModification(sampleSetting);
                     }
 
                     EditorGUI.BeginChangeCheck();
@@ -990,13 +990,13 @@ public class GPUSkinningSamplerEditor : Editor
                     distSP.floatValue = EditorGUILayout.FloatField(distSP.floatValue, GUILayout.Width(80));
                     if(EditorGUI.EndChangeCheck())
                     {
-                        ApplySamplerModification(sampler);
+                        ApplySamplerModification(sampleSetting);
                     }
                 }
                 EditorGUILayout.EndHorizontal();
             }
 
-            OnGUI_LODDistancesChecking(sampler);
+            OnGUI_LODDistancesChecking(sampleSetting);
         }
         EditorGUILayout.EndVertical();
 
@@ -1004,31 +1004,31 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("sphereRadius"));
     }
 
-    private void OnGUI_LODDistancesChecking(GPUSkinningSampler sampler)
+    private void OnGUI_LODDistancesChecking(GPUSkinningSampleSetting sampleSetting)
     {
-        if(!LodDistancesIsLegal(sampler))
+        if(!LodDistancesIsLegal(sampleSetting))
         {
             EditorGUILayout.HelpBox("Error: LOD distances must be sorted in ascending order.", MessageType.Error);
         }
     }
 
-    private bool LodDistancesIsLegal(GPUSkinningSampler sampler)
+    private bool LodDistancesIsLegal(GPUSkinningSampleSetting sampleSetting)
     {
-        if(sampler.lodDistances == null)
+        if(sampleSetting.lodDistances == null)
         {
             return true;
         }
 
         float value = float.MinValue;
         bool isLegal = true;
-        for (int i = 0; i < sampler.lodDistances.Length; ++i)
+        for (int i = 0; i < sampleSetting.lodDistances.Length; ++i)
         {
-            if (sampler.lodDistances[i] <= value)
+            if (sampleSetting.lodDistances[i] <= value)
             {
                 isLegal = false;
                 break;
             }
-            value = sampler.lodDistances[i];
+            value = sampleSetting.lodDistances[i];
         }
 
         return isLegal;
@@ -1396,12 +1396,12 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
 
-    private void ApplySamplerModification(GPUSkinningSampler sampler)
+    private void ApplySamplerModification(GPUSkinningSampleSetting sampleSetting)
     {
-        if(sampler != null)
+        if(sampleSetting != null)
         {
-            EditorUtility.SetDirty(sampler);
-            EditorUtility.SetDirty(sampler.gameObject);
+            EditorUtility.SetDirty(sampleSetting);
+            EditorUtility.SetDirty(sampleSetting.gameObject);
             EditorSceneManager.SaveOpenScenes();
         }
     }
@@ -1414,11 +1414,11 @@ public class GPUSkinningSamplerEditor : Editor
             return;
         }
 
-        GPUSkinningSampler sampler = target as GPUSkinningSampler;
+        GPUSkinningSampleSetting sampleSetting = target as GPUSkinningSampleSetting;
 
         if (EditorApplication.isCompiling)
         {
-            if (Selection.activeGameObject == sampler.gameObject)
+            if (Selection.activeGameObject == sampleSetting.gameObject)
             {
                 Selection.activeGameObject = null;
                 return; 
@@ -1440,28 +1440,28 @@ public class GPUSkinningSamplerEditor : Editor
 
         time = Time.realtimeSinceStartup;
 
-        if(!sampler.isSampling && sampler.IsSamplingProgress())
+        if(!sampleSetting.isSampling && sampleSetting.IsSamplingProgress())
         {
             // 当前不在采样并在采样的过程中
-            if (++sampler.samplingClipIndex < sampler.animClips.Length)
+            if (++sampleSetting.samplingClipIndex < sampleSetting.animClips.Length)
             {
                 // 开始下一个动画采样
-                sampler.StartSample();
+                sampleSetting.StartSample();
             }
             else
             {
                 // 采样结束
-                sampler.EndSample();
+                sampleSetting.EndSample();
                 EditorApplication.isPlaying = false;
                 EditorUtility.ClearProgressBar();
                 LockInspector(false);
             }
         }
         
-        if (sampler.isSampling)
+        if (sampleSetting.isSampling)
         {
-            string msg = sampler.animClip.name + "(" + (sampler.samplingClipIndex + 1) + "/" + sampler.animClips.Length +")";
-            EditorUtility.DisplayProgressBar("Sampling, DONOT stop playing", msg, (float)(sampler.samplingFrameIndex + 1) / sampler.samplingTotalFrams);
+            string msg = sampleSetting.animClip.name + "(" + (sampleSetting.samplingClipIndex + 1) + "/" + sampleSetting.animClips.Length +")";
+            EditorUtility.DisplayProgressBar("Sampling, DONOT stop playing", msg, (float)(sampleSetting.samplingFrameIndex + 1) / sampleSetting.samplingTotalFrams);
         }
     }
 
@@ -1558,35 +1558,35 @@ public class GPUSkinningSamplerEditor : Editor
 
         if (!Application.isPlaying)
         {
-            Object obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_ANIM_PATH));
+            Object obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_ANIM_PATH));
             if (obj != null && obj is GPUSkinningAnimation)
             {
                 serializedObject.FindProperty("anim").objectReferenceValue = obj;
             }
 
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH));
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_MESH_PATH));
             if (obj != null && obj is Mesh)
             {
                 serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
             }
 
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH));
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_MTRL_PATH));
             if (obj != null && obj is Material)
             {
                 serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
             }
 
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_SHADER_PATH));
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_SHADER_PATH));
             if (obj != null && obj is Shader)
             {
                 serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
             }
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_TEXTURE_PATH));
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_TEXTURE_PATH));
             if(obj != null && obj is TextAsset)
             {
                 serializedObject.FindProperty("texture").objectReferenceValue = obj;
             }
-            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampler.ReadTempData(GPUSkinningSampler.TEMP_SAVED_TEXTUREBIND_PATH));
+            obj = AssetDatabase.LoadMainAssetAtPath(GPUSkinningSampleSetting.ReadTempData(Constants.TEMP_SAVED_TEXTUREBIND_PATH));
             if(obj != null && obj is TextAsset)
             {
                 serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
@@ -1594,11 +1594,11 @@ public class GPUSkinningSamplerEditor : Editor
 
             serializedObject.ApplyModifiedProperties();
 
-            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_ANIM_PATH);
-            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MESH_PATH);
-            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_MTRL_PATH);
-            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_SHADER_PATH);
-            GPUSkinningSampler.DeleteTempData(GPUSkinningSampler.TEMP_SAVED_TEXTURE_PATH);
+            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_ANIM_PATH);
+            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_MESH_PATH);
+            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_MTRL_PATH);
+            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_SHADER_PATH);
+            GPUSkinningSampleSetting.DeleteTempData(Constants.TEMP_SAVED_TEXTURE_PATH);
         }
 
         isBoundsFoldout = GetEditorPrefsBool("isBoundsFoldout", true);

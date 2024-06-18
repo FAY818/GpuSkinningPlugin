@@ -15,92 +15,126 @@ using UnityEditor;
 /// GPUSkinning 动画采样器
 /// </summary>
 [ExecuteInEditMode]
-public class GPUSkinningSampler : MonoBehaviour
+public class GPUSkinningSampleSetting : MonoBehaviour
 {
 #if UNITY_EDITOR
 
     #region Properties
+    
+    //////////////////////////////////持久化保存文件///////////////////////////////
+    [HideInInspector] 
+    [SerializeField] 
+    public GPUSkinningAnimation anim = null; 
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public Mesh savedMesh = null; 
 
-    [HideInInspector] [SerializeField] public string animName = null;
+    [HideInInspector] 
+    [SerializeField] 
+    public Material savedMtrl = null; 
 
-    [HideInInspector] [System.NonSerialized]
-    public AnimationClip animClip = null; // 当前正在采样的动画片段
+    [HideInInspector] 
+    [SerializeField] 
+    public Shader savedShader = null;
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public TextAsset texture = null;
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public TextAsset textureBind = null; 
 
-    [HideInInspector] [SerializeField] public AnimationClip[] animClips = null; // 待采样的动画片段集合
+    //////////////////////////////////自定义选项///////////////////////////////
+    [HideInInspector] 
+    [SerializeField] 
+    public GPUSkinningAnimType animType = GPUSkinningAnimType.Skeleton;
 
-    [HideInInspector] [SerializeField] public GPUSkinningWrapMode[] wrapModes = null; // Inspector中暴露的设置选项
+    [HideInInspector] 
+    [SerializeField] 
+    public GPUSkinningQuality skinQuality = GPUSkinningQuality.Bone4;
 
-    [HideInInspector] [SerializeField] public int[] fpsList = null; // Inspector中暴露的设置选项
+    [HideInInspector] 
+    [SerializeField] 
+    public GPUSkinningShaderType shaderType = GPUSkinningShaderType.Unlit;
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public Transform rootBoneTransform = null; // 此关节点是骨骼和挂点的Root，只收集从此点开始的位移信息；
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public bool createNewShader = false;
+    
+    //////////////////////////////////animClip///////////////////////////////
+    [HideInInspector] 
+    [SerializeField] 
+    public string animName = null; 
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public AnimationClip[] animClips = null; // 面板中的动画片段列表
 
-    [HideInInspector] [SerializeField] public bool[] rootMotionEnabled = null; // Inspector中暴露的设置选项
+    [HideInInspector] 
+    [SerializeField] 
+    public GPUSkinningWrapMode[] wrapModes = null;
 
-    [HideInInspector] [SerializeField] public bool[] individualDifferenceEnabled = null; // Inspector中暴露的设置选项
+    [HideInInspector] 
+    [SerializeField] 
+    public int[] fpsList = null;
 
-    [HideInInspector] [SerializeField] public Mesh[] lodMeshes = null;
+    [HideInInspector] 
+    [SerializeField] 
+    public bool[] rootMotionEnabled = null; 
 
-    [HideInInspector] [SerializeField] public float[] lodDistances = null;
+    [HideInInspector]
+    [SerializeField] 
+    public bool[] individualDifferenceEnabled = null; 
+    
+    //////////////////////////////////Lod///////////////////////////////
+    [HideInInspector] 
+    [SerializeField] 
+    public Mesh[] lodMeshes = null;
 
-    [HideInInspector] [SerializeField] private float sphereRadius = 1.0f;
+    [HideInInspector] 
+    [SerializeField] 
+    public float[] lodDistances = null;
 
-    [HideInInspector] [SerializeField] public bool createNewShader = false;
-
-    [HideInInspector] [System.NonSerialized]
-    public int samplingClipIndex = -1;
-
-    [HideInInspector] [SerializeField] public TextAsset texture = null;
-
-    [HideInInspector] [SerializeField] public TextAsset textureBind = null;
-
-    [HideInInspector] [SerializeField] public GPUSkinningAnimType animType = GPUSkinningAnimType.Skeleton;
-
-    [HideInInspector] [SerializeField] public GPUSkinningQuality skinQuality = GPUSkinningQuality.Bone4;
-
-    [HideInInspector] [SerializeField] public Transform rootBoneTransform = null; // 此关节点是骨骼和挂点的Root，只收集从此点开始的位移信息；
-
-    [HideInInspector] [SerializeField] public GPUSkinningAnimation anim = null; // 持久化保存的动画的配置文件
-
-    [HideInInspector] [SerializeField] public GPUSkinningShaderType shaderType = GPUSkinningShaderType.Unlit;
-
-    [HideInInspector] [System.NonSerialized]
-    public bool isSampling = false;
-
-    [HideInInspector] [SerializeField] public Mesh savedMesh = null; // 导出的Mesh
-
-    [HideInInspector] [SerializeField] public Material savedMtrl = null; // 导出的材质
-
-    [HideInInspector] [SerializeField] public Shader savedShader = null;
-
-    [HideInInspector] [SerializeField] public bool updateOrNew = true;
-
+    [HideInInspector] 
+    [SerializeField] 
+    private float sphereRadius = 1.0f;
+    
+    //////////////////////////////////采集时持有的临时变量///////////////////////////////
+    [HideInInspector] 
+    [System.NonSerialized]
+    public AnimationClip animClip = null; // 正在采样的AudioClip
+    
+    [HideInInspector] 
+    [System.NonSerialized]
+    public int samplingTotalFrams = 0; // 正在采样的AudioClip总帧数
+    
+    [HideInInspector] 
+    [System.NonSerialized]
+    public int samplingFrameIndex = 0; // 正在采样的AudioClip的帧索引
+    
+    [HideInInspector] 
+    [System.NonSerialized]
+    public int samplingClipIndex = -1; // 正在采样的AudioClip的索引
+    
+    [HideInInspector] 
+    [System.NonSerialized]
+    public bool isSampling = false; // 是否正在采样
+    
     private Animation animation = null;
-
     private Animator animator = null;
-    private RuntimeAnimatorController runtimeAnimatorController = null; // 当前采样的RuntimeAnimatorController 
-
+    private RuntimeAnimatorController runtimeAnimatorController = null;
     private SkinnedMeshRenderer smr = null;
-
-    private GPUSkinningAnimation gpuSkinningAnimation = null; //  此脚本运行时使用的配置文件
-
-    private GPUSkinningClip gpuSkinningClip = null; // 当前动画片段的采集数据
-
+    private GPUSkinningAnimation gpuSkinningAnimation = null; 
+    private GPUSkinningClip gpuSkinningClip = null;
     private Vector3 rootMotionPosition;
-
     private Quaternion rootMotionRotation;
-
-    [HideInInspector] [System.NonSerialized]
-    public int samplingTotalFrams = 0; // 当前动画片段总采样帧数
-
-    [HideInInspector] [System.NonSerialized]
-    public int samplingFrameIndex = 0; // 当前采样帧索引
-
-    // 采样文件保存路径
-    public const string TEMP_SAVED_ANIM_PATH = "GPUSkinning_Temp_Save_Anim_Path";
-    public const string TEMP_SAVED_MTRL_PATH = "GPUSkinning_Temp_Save_Mtrl_Path";
-    public const string TEMP_SAVED_MESH_PATH = "GPUSkinning_Temp_Save_Mesh_Path";
-    public const string TEMP_SAVED_SHADER_PATH = "GPUSkinning_Temp_Save_Shader_Path";
-    public const string TEMP_SAVED_TEXTURE_PATH = "GPUSkinning_Temp_Save_Texture_Path";
-    public const string TEMP_SAVED_TEXTUREBIND_PATH = "GPUSkinning_Temp_Save_TextureBind_Path";
-
+    
     #endregion
 
     #region Mono
@@ -225,7 +259,7 @@ public class GPUSkinningSampler : MonoBehaviour
                         AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
                     }
 
-                    WriteTempData(TEMP_SAVED_ANIM_PATH, savedAnimPath);
+                    WriteTempData(Constants.TEMP_SAVED_ANIM_PATH, savedAnimPath);
 
 
                     CreateTextureMatrix(dir, gpuSkinningAnimation); // 骨骼矩阵贴图
@@ -240,7 +274,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
                         string savedMeshPath = dir + "/GPUSKinning_Mesh_" + animName + ".asset";
                         AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-                        WriteTempData(TEMP_SAVED_MESH_PATH, savedMeshPath);
+                        WriteTempData(Constants.TEMP_SAVED_MESH_PATH, savedMeshPath);
                         savedMesh = newMesh;
 
                         CreateShaderAndMaterial(dir);
@@ -349,7 +383,7 @@ public class GPUSkinningSampler : MonoBehaviour
                         AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
                     }
 
-                    WriteTempData(TEMP_SAVED_ANIM_PATH, savedAnimPath);
+                    WriteTempData(Constants.TEMP_SAVED_ANIM_PATH, savedAnimPath);
 
                     // 骨骼矩阵贴图
                     CreateVertexTexture(dir, gpuSkinningAnimation, smr.sharedMesh);
@@ -364,7 +398,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
                         string savedMeshPath = dir + "/GPUSKinning_MeshVert_" + animName + ".asset";
                         AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-                        WriteTempData(TEMP_SAVED_MESH_PATH, savedMeshPath);
+                        WriteTempData(Constants.TEMP_SAVED_MESH_PATH, savedMeshPath);
                         savedMesh = newMesh;
 
                         CreateShaderAndMaterialVert(dir);
@@ -635,7 +669,7 @@ public class GPUSkinningSampler : MonoBehaviour
     }
 
     /// <summary>
-    /// 映射inspector面板中的AnimationClip信息，自动
+    /// 映射Animation组件中的AnimationClip信息
     /// </summary>
     public void MappingAnimationClips()
     {
@@ -644,6 +678,7 @@ public class GPUSkinningSampler : MonoBehaviour
             return;
         }
 
+        // 添加AnimationClip
         List<AnimationClip> newClips = null;
         AnimationClip[] clips = AnimationUtility.GetAnimationClips(animation.transform.gameObject);
         if (clips != null)
@@ -653,16 +688,17 @@ public class GPUSkinningSampler : MonoBehaviour
                 AnimationClip clip = clips[i];
                 if (clip != null)
                 {
-                    // 没有采样，或者是新的动画片段
+                    // 第一次添加组件或者是新的动画片段加入
                     if (animClips == null || System.Array.IndexOf(animClips, clip) == -1)
                     {
                         if (newClips == null)
                         {
                             newClips = new List<AnimationClip>();
                         }
-
+                        
                         newClips.Clear();
-                        if (animClips != null) newClips.AddRange(animClips);
+                        if (animClips != null) 
+                            newClips.AddRange(animClips); // 已经持有的animation clips
                         newClips.Add(clip);
                         animClips = newClips.ToArray();
                     }
@@ -670,6 +706,7 @@ public class GPUSkinningSampler : MonoBehaviour
             }
         }
 
+        // 删除多余的animation clips
         if (animClips != null && clips != null)
         {
             for (int i = 0; i < animClips.Length; ++i)
@@ -677,6 +714,7 @@ public class GPUSkinningSampler : MonoBehaviour
                 AnimationClip clip = animClips[i];
                 if (clip != null)
                 {
+                    // 已经持有的animation clips不在animation组件中
                     if (System.Array.IndexOf(clips, clip) == -1)
                     {
                         if (newClips == null)
@@ -1287,7 +1325,7 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
 
-        WriteTempData(TEMP_SAVED_TEXTUREBIND_PATH, savedPathBind);
+        WriteTempData(Constants.TEMP_SAVED_TEXTUREBIND_PATH, savedPathBind);
 
 
         Texture2D texture = new Texture2D(gpuSkinningAnim.textureWidth, gpuSkinningAnim.textureHeight,
@@ -1344,7 +1382,7 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
 
-        WriteTempData(TEMP_SAVED_TEXTURE_PATH, savedPath);
+        WriteTempData(Constants.TEMP_SAVED_TEXTURE_PATH, savedPath);
     }
 
     private void CreateVertexTexture(string dir, GPUSkinningAnimation gpuSkinningAnim, Mesh mesh)
@@ -1429,7 +1467,7 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
 
-        WriteTempData(TEMP_SAVED_TEXTURE_PATH, savedPathBind);
+        WriteTempData(Constants.TEMP_SAVED_TEXTURE_PATH, savedPathBind);
     }
 
     #endregion
@@ -1451,7 +1489,7 @@ public class GPUSkinningSampler : MonoBehaviour
             shaderStr = SkinQualityShaderStr(shaderStr);
             string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
             File.WriteAllText(shaderPath, shaderStr);
-            WriteTempData(TEMP_SAVED_SHADER_PATH, shaderPath);
+            WriteTempData(Constants.TEMP_SAVED_SHADER_PATH, shaderPath);
             AssetDatabase.ImportAsset(shaderPath);
             shader = AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader;
         }
@@ -1466,7 +1504,7 @@ public class GPUSkinningSampler : MonoBehaviour
                 skinQuality == GPUSkinningQuality.Bone2 ? 2 :
                 skinQuality == GPUSkinningQuality.Bone4 ? 4 : 1;
             shader = Shader.Find(shaderName);
-            WriteTempData(TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
+            WriteTempData(Constants.TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
         }
 
         Material mtrl = new Material(shader);
@@ -1477,7 +1515,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
         string savedMtrlPath = dir + "/GPUSKinning_Material_" + animName + ".mat";
         AssetDatabase.CreateAsset(mtrl, savedMtrlPath);
-        WriteTempData(TEMP_SAVED_MTRL_PATH, savedMtrlPath);
+        WriteTempData(Constants.TEMP_SAVED_MTRL_PATH, savedMtrlPath);
     }
     private void CreateShaderAndMaterialVert(string dir)
     {
@@ -1498,7 +1536,7 @@ public class GPUSkinningSampler : MonoBehaviour
                 skinQuality == GPUSkinningQuality.Bone2 ? 2 :
                 skinQuality == GPUSkinningQuality.Bone4 ? 4 : 1;
             shader = Shader.Find(shaderName);
-            WriteTempData(TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
+            WriteTempData(Constants.TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
         }
 
         Material mtrl = new Material(shader);
@@ -1509,7 +1547,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
         string savedMtrlPath = dir + "/GPUSKinning_MaterialVert_" + animName + ".mat";
         AssetDatabase.CreateAsset(mtrl, savedMtrlPath);
-        WriteTempData(TEMP_SAVED_MTRL_PATH, savedMtrlPath);
+        WriteTempData(Constants.TEMP_SAVED_MTRL_PATH, savedMtrlPath);
     }
 
     private string SkinQualityShaderStr(string shaderStr)
