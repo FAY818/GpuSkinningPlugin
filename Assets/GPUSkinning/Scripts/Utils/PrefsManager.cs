@@ -103,7 +103,5 @@ public static class PrefsManager
     }
 
     #endregion
-    
-    
 }
 

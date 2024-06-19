@@ -57,4 +57,6 @@ public static class Constants
     public const string EDITOR_PREFS_KEY_LOD = "isLODFoldout";
     public const string EDITOR_PREFS_KEY_ANIMEVENTS = "isAnimEventsFoldout";
     
+    // PlayerPrefs
+    public const string USER_PREFS_DIR = "GPUSkinning_UserPreferDir";
 }

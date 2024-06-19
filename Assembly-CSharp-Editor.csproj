@@ -41,7 +41,7 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets/GPUSkinning/Editor/GPUSkinningSampleSettingEditor.cs" />
+     <Compile Include="Assets/GPUSkinning/Editor/GPUSkinningSamplerEditor.cs" />
      <Compile Include="Assets/GPUSkinning/Editor/GPUSkinningStandardShaderGUI.cs" />
      <Compile Include="Assets/GPUSkinning/Editor/GPUSkinningPlayerMonoEditor.cs" />
      <Reference Include="UnityEngine">

@@ -52,14 +52,13 @@
      <Compile Include="Assets/GPUSkinning/Scripts/SerializableData/GPUSkinningAnimation.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Utils/GPUSkinningBetterList.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/SerializableData/GPUSkinningBone.cs" />
-     <Compile Include="Assets/GPUSkinning/Scripts/Sampler/GPUSkinningSampleSetting.cs" />
+     <Compile Include="Assets/GPUSkinning/Scripts/Sampler/GPUSkinningSampler.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/SerializableData/GPUSkinningAnimEvent.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningPlayerMono.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningMaterial.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Utils/GPUSkinningCycleList.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Runtime/GPUSkinningPlayerResources.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Enum/GPUSkinningEnum.cs" />
-     <Compile Include="Assets/GPUSkinning/Scripts/Sampler/GPUSkinningSamplerBase.cs" />
      <Compile Include="Assets/GPUSkinning/Scripts/Utils/PrefsManager.cs" />
      <None Include="Assets/GPUSkinning/Resources/GPUSkinningUnlitSkin2.shader" />
      <None Include="Assets/GPUSkinning/Resources/GPUSkinningUnlitSkin1.shader" />
