@@ -1,4 +1,4 @@
-Shader "GPUSkinning/Vertices_Unlit_Skin4"
+Shader "GPUSkinning/Vertices_Unlit_Skin"
 {
     Properties
     {
@@ -7,6 +7,7 @@ Shader "GPUSkinning/Vertices_Unlit_Skin4"
     
     CGINCLUDE
     #include "UnityCG.cginc"
+    #include "Assets/GPUSkinning/Resources/GPUSkinningVertexInclude.cginc"
 
     struct appdata
     {
@@ -29,7 +30,7 @@ Shader "GPUSkinning/Vertices_Unlit_Skin4"
     {
         UNITY_SETUP_INSTANCE_ID(v);
         v2f o;
-        float4 pos = (0,0,0,0); // Todo:待替换
+        float4 pos = vertex_Skin(v.uv2.x); // 顶点在模型空间中的坐标
         o.vertex = UnityObjectToClipPos(pos);
         o.uv = TRANSFORM_TEX(v.uv, _MainTex);
         return o;
@@ -54,7 +55,7 @@ Shader "GPUSkinning/Vertices_Unlit_Skin4"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_instancing
-            // Todo : 融合开启宏定义
+            #pragma multi_compile ROOTON_BLENDOFF ROOTON_BLENDON_CROSSFADEROOTON ROOTON_BLENDON_CROSSFADEROOTOFF ROOTOFF_BLENDOFF ROOTOFF_BLENDON_CROSSFADEROOTON ROOTOFF_BLENDON_CROSSFADEROOTOFF
             ENDCG
         }
     }

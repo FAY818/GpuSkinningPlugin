@@ -556,6 +556,7 @@ public class GPUSkinningSampler : MonoBehaviour
         PrefsManager.SetString(Constants.TEMP_SAVED_ANIM_PATH, savedAnimPath);
 
         /////////////////////////Texture/////////////////////////
+        CreateBindTexture(dir, gpuSkinningAnimation);
         CreateSkeletonTexture(dir, gpuSkinningAnimation); // 骨骼矩阵贴图
 
         if (samplingClipIndex == 0) // 采样第一个AnimClip时执行
@@ -591,6 +592,7 @@ public class GPUSkinningSampler : MonoBehaviour
         /////////////////////////Script Object/////////////////////////
         string savedAnimPath = dir + "/GPUSKinning_VertexAnim_" + animName + ".asset";
         SetSthAboutVertexTexture(gpuSkinningAnimation, smr.sharedMesh);
+        SetSthAboutBindBoneTexture(gpuSkinningAnimation);
         gpuSkinningAnimation.gpuSkinningAnimType = GPUSkinningAnimType.Vertices;
         EditorUtility.SetDirty(gpuSkinningAnimation);
         if (anim != gpuSkinningAnimation)
@@ -600,6 +602,7 @@ public class GPUSkinningSampler : MonoBehaviour
         PrefsManager.SetString(Constants.TEMP_SAVED_ANIM_VERTEX_PATH, savedAnimPath);
 
         /////////////////////////Texture/////////////////////////
+        CreateBindTexture(dir, gpuSkinningAnimation);
         CreateVertexTexture(dir, gpuSkinningAnimation, smr.sharedMesh);
 
         if (samplingClipIndex == 0) // 采样第一个AnimClip时执行
@@ -621,10 +624,11 @@ public class GPUSkinningSampler : MonoBehaviour
             CreateVertShaderAndMaterial(dir);
 
             /////////////////////////Prefab/////////////////////////
-            //CreateVertexPrefab(dir);
+            CreateVertexPrefab(dir);
         }
 
         // Todo：清除工作
+        ClearSkinningBones();
         anim = gpuSkinningAnimation;
         AssetDatabase.Refresh();
         AssetDatabase.SaveAssets();
@@ -683,16 +687,15 @@ public class GPUSkinningSampler : MonoBehaviour
 
         GPUSkinningBone[] bones = gpuSkinningAnimation.bones;
         int numBones = bones.Length;
-
-        for (int i = 0; i < numBones; ++i)
+        // 采样每根骨骼的模型空间变换矩阵
+        for(int i = 0; i < numBones; ++i)
         {
             GPUSkinningBone currentBone = bones[i];
-            Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation,
-                currentBone.transform.localScale);
-            frame.matrices[i] = mat;
-            // 向上遍历骨骼的所有父节点
+            frame.matrices[i] = currentBone.bindpose;
             do
             {
+                Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
+                frame.matrices[i] = mat * frame.matrices[i];
                 if (currentBone.parentBoneIndex == -1)
                 {
                     break;
@@ -701,13 +704,8 @@ public class GPUSkinningSampler : MonoBehaviour
                 {
                     currentBone = bones[currentBone.parentBoneIndex];
                 }
-
-                // 骨骼的变换矩阵
-                mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation,
-                    currentBone.transform.localScale);
-                // 模型空间-骨骼空间-父骨骼-...-根节点
-                frame.matrices[i] = mat * frame.matrices[i];
-            } while (true);
+            }
+            while (true);
         }
 
         // 处理根节点的变换
@@ -875,7 +873,7 @@ public class GPUSkinningSampler : MonoBehaviour
         return skinningBonesArray;
     }
 
-    private int GetBoneIndex(GPUSkinningBone[] bones, Transform bone)
+    private int GetSkinningBoneIndex(GPUSkinningBone[] bones, Transform bone)
     {
         for (int i = 0; i < bones.Length; i++)
         {
@@ -910,13 +908,19 @@ public class GPUSkinningSampler : MonoBehaviour
     }
 
     //骨骼索引，此索引是序列化数据中的骨骼索引，非Mesh中
-    private int GetBoneIndex(GPUSkinningBone bone)
+    private int GetSkinningBoneIndex(GPUSkinningBone bone)
     {
         int index = System.Array.IndexOf(gpuSkinningAnimation.skinningBones, bone);
         return index;
     }
+    
+    //骨骼索引，此索引是序列化数据中的骨骼索引，非Mesh中
+    private int GetBoneIndex(GPUSkinningBone bone)
+    {
+        int index = System.Array.IndexOf(gpuSkinningAnimation.bones, bone);
+        return index;
+    }
 
-    // Todo
     private int GetSkinningBoneParentIndex(GPUSkinningBone bone)
     {
         if (bone.parentBoneIndex == -1)
@@ -1070,16 +1074,16 @@ public class GPUSkinningSampler : MonoBehaviour
             GPUSkinningBone bone3 = GetBoneByTransform(smrBones[weights[3].index]);
 
             Vector4 skinData_01 = new Vector4();
-            skinData_01.x = GetBoneIndex(bone0); // 索引（序列化数据中的索引）
+            skinData_01.x = GetSkinningBoneIndex(bone0); // 索引（序列化数据中的索引）
             skinData_01.y = weights[0].weight; // 权重
-            skinData_01.z = GetBoneIndex(bone1);
+            skinData_01.z = GetSkinningBoneIndex(bone1);
             skinData_01.w = weights[1].weight;
             uv2[i] = skinData_01;
 
             Vector4 skinData_23 = new Vector4();
-            skinData_23.x = GetBoneIndex(bone2);
+            skinData_23.x = GetSkinningBoneIndex(bone2);
             skinData_23.y = weights[2].weight;
-            skinData_23.z = GetBoneIndex(bone3);
+            skinData_23.z = GetSkinningBoneIndex(bone3);
             skinData_23.w = weights[3].weight;
             uv3[i] = skinData_23;
         }
@@ -1123,14 +1127,14 @@ public class GPUSkinningSampler : MonoBehaviour
             newMesh.uv = uv;
         }
 
-        List<Vector4> indices = new List<Vector4>();
-        int numVertices = mesh.vertexCount;
+        List<Vector4> vertexIndiex = new List<Vector4>();
+        int numVertices = newMesh.vertices.Length;
         for (int vertexIndex = 0;  vertexIndex < numVertices;  vertexIndex++)
         {
-            indices.Add(new Vector4(vertexIndex, vertexIndex, vertexIndex, vertexIndex));
+            vertexIndiex.Add(new Vector4(vertexIndex, vertexIndex, vertexIndex, vertexIndex));
         }
 
-        newMesh.SetUVs(1, indices);
+        newMesh.SetUVs(1, vertexIndiex);
         newMesh.triangles = mesh.triangles;
         return newMesh;
     }
@@ -1187,6 +1191,7 @@ public class GPUSkinningSampler : MonoBehaviour
             GPUSkinningClip clip = clips[clipIndex];
             GPUSkinningFrame[] frames = clip.frames;
             int numFrames = frames.Length;
+            clip.pixelSegmentation = totalFrames;
             totalFrames += numFrames;
         }
 
@@ -1237,7 +1242,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
     
-    private void CreateSkeletonTexture(string dir, GPUSkinningAnimation gpuSkinningAnim)
+    private void CreateBindTexture(string dir, GPUSkinningAnimation gpuSkinningAnim)
     {
         Texture2D textureBind = new Texture2D(gpuSkinningAnim.bindTextureWidth, gpuSkinningAnim.bindTextureHeight,
             TextureFormat.RGBAHalf, false, true);
@@ -1263,7 +1268,7 @@ public class GPUSkinningSampler : MonoBehaviour
         textureBind.SetPixels(pixelsBind);
         textureBind.Apply();
 
-        string savedPathBind = dir + "/GPUSKinning_SkeletonTextureBind_" + animName + ".bytes";
+        string savedPathBind = dir + "/GPUSKinning_TextureBind_" + animName + ".bytes";
         using (FileStream fileStream = new FileStream(savedPathBind, FileMode.Create))
         {
             byte[] bytes = textureBind.GetRawTextureData();
@@ -1274,8 +1279,10 @@ public class GPUSkinningSampler : MonoBehaviour
         }
 
         PrefsManager.SetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH, savedPathBind);
-
-
+    }
+    
+    private void CreateSkeletonTexture(string dir, GPUSkinningAnimation gpuSkinningAnim)
+    {
         Texture2D texture = new Texture2D(gpuSkinningAnim.textureWidth, gpuSkinningAnim.textureHeight,
             TextureFormat.RGBAHalf, false, true);
         texture.filterMode = FilterMode.Point;
@@ -1366,14 +1373,14 @@ public class GPUSkinningSampler : MonoBehaviour
                     Debug.LogError("Set wrong RootBone");
                     return;
                 }
-
                 // 逐顶点
                 for (int vertexIndex = 0; vertexIndex < mesh.vertices.Length; ++vertexIndex)
                 {
-                    boneWeight = boneWeights[vertexIndex];
-                    bone0 = GetBoneByTransform(smr.bones[boneWeight.boneIndex0]);
-                    boneIndex0 = GetBoneIndex(bone0);
-                    boneMatrx0 = matrices[boneIndex0];
+                    boneWeight = boneWeights[vertexIndex]; // 顶点的骨骼权重
+
+                    bone0 = GetBoneByTransform(smr.bones[boneWeight.boneIndex0]); // 蒙皮骨骼
+                    boneIndex0 = GetBoneIndex(bone0); // 蒙皮骨骼在所有骨骼列表中的索引
+                    boneMatrx0 = matrices[boneIndex0]; // 对应蒙皮骨骼的采样变换矩阵
                     boneMatrx0 = GPUSkinningUtil.MatrixMulFloat(boneMatrx0, boneWeight.weight0);
 
                     bone1 = GetBoneByTransform(smr.bones[boneWeight.boneIndex1]);
@@ -1397,7 +1404,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
                     position = GPUSkinningUtil.MatrixAddMatrix(GPUSkinningUtil.MatrixAddMatrix(boneMatrx0, boneMatrx1),
                         GPUSkinningUtil.MatrixAddMatrix(boneMatrx2, boneMatrx3)) * vertexV4;
-                    pixels[pixelIndex] = new Color(position.x, position.y, position.z, position.w); // 旋转
+                    pixels[pixelIndex] = new Color(position.x, position.y, position.z);
                     pixelIndex++;
                 }
             }
@@ -1480,10 +1487,6 @@ public class GPUSkinningSampler : MonoBehaviour
                 shaderType == GPUSkinningShaderType.Unlit ? "GPUSkinning/Vertices_Unlit_Skin" :
                 shaderType == GPUSkinningShaderType.StandardSpecular ? "" :
                 shaderType == GPUSkinningShaderType.StandardMetallic ? "" : string.Empty;
-            shaderName +=
-                skinQuality == GPUSkinningQuality.Bone1 ? 1 :
-                skinQuality == GPUSkinningQuality.Bone2 ? 2 :
-                skinQuality == GPUSkinningQuality.Bone4 ? 4 : 1;
             shader = Shader.Find(shaderName);
             PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_VERTEX_PATH, AssetDatabase.GetAssetPath(shader));
         }
@@ -1532,7 +1535,7 @@ public class GPUSkinningSampler : MonoBehaviour
         string meshFileName = "GPUSKinning_SkeletonMesh_" + animName + ".asset";
         string mtrlFileName = "GPUSKinning_SkeletonMaterial_" + animName + ".mat";
         string textureRawDataFileName = "GPUSKinning_SkeletonTexture_" + animName + ".bytes";
-        string textureRawBindDataFileName = "GPUSKinning_SkeletonTextureBind_" + animName + ".bytes";
+        string textureRawBindDataFileName = "GPUSKinning_TextureBind_" + animName + ".bytes";
 
         GameObject prefab = new GameObject(prefabFileName);
         MeshFilter meshFilter = prefab.AddComponent<MeshFilter>();
@@ -1564,7 +1567,8 @@ public class GPUSkinningSampler : MonoBehaviour
         string meshFileName = "GPUSKinning_VertMesh_" + animName + ".asset";
         string mtrlFileName = "GPUSKinning_VertMaterial_" + animName + ".mat";
         string textureRawDataFileName = "GPUSKinning_VertTexture_" + animName + ".bytes";
-
+        string textureRawBindDataFileName = "GPUSKinning_TextureBind_" + animName + ".bytes";
+        
         GameObject prefab = new GameObject(prefabFileName);
         MeshFilter meshFilter = prefab.AddComponent<MeshFilter>();
         meshFilter.sharedMesh = savedMesh;
@@ -1580,7 +1584,9 @@ public class GPUSkinningSampler : MonoBehaviour
         ;
         TextAsset textureRawData =
             AssetDatabase.LoadAssetAtPath<TextAsset>(Path.Combine(savePath, textureRawDataFileName));
-        //gpuSkinningPlayerMono.Init(anim, mesh, mtrl, textureRawData, textureBindRawData);
+        TextAsset textureBindRawData =
+            AssetDatabase.LoadAssetAtPath<TextAsset>(Path.Combine(savePath, textureRawBindDataFileName));
+        gpuSkinningPlayerMono.Init(anim, mesh, mtrl, textureRawData, textureBindRawData);
         string prefabPath = Path.Combine(savePath, prefabFileName);
         PrefabUtility.CreatePrefab(prefabPath, prefab);
         DestroyImmediate(prefab);

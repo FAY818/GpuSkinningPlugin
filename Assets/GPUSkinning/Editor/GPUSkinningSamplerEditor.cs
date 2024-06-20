@@ -82,6 +82,7 @@ public class GPUSkinningSamplerEditor : Editor
         EditorApplication.update += UpdateHandler;
         time = Time.realtimeSinceStartup;
         
+        // 加载本地依赖资源
         LoadAssets();
         
         // 读取编辑器默认折叠配置
@@ -201,6 +202,12 @@ public class GPUSkinningSamplerEditor : Editor
                 serializedObject.FindProperty("texture").objectReferenceValue = obj;
             }
             
+            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH));
+            if(obj != null && obj is TextAsset)
+            {
+                serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
+            }
+            
             serializedObject.ApplyModifiedProperties();
             
             PrefsManager.DeleteKey(Constants.TEMP_SAVED_ANIM_VERTEX_PATH);
@@ -208,6 +215,7 @@ public class GPUSkinningSamplerEditor : Editor
             PrefsManager.DeleteKey(Constants.TEMP_SAVED_MTRL_VERTEX_PATH);
             PrefsManager.DeleteKey(Constants.TEMP_SAVED_SHADER_VERTEX_PATH);
             PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH);
+            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTUREBIND_PATH);
         }
     }
 
@@ -350,16 +358,12 @@ public class GPUSkinningSamplerEditor : Editor
                 }
                 EditorGUILayout.EndHorizontal();
                 
-                // 骨骼动画需要绑定姿势矩阵贴图
-                if (animType == GPUSkinningAnimType.Skeleton)
+                EditorGUILayout.BeginHorizontal();
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        GUILayout.FlexibleSpace();
-                        EditorGUILayout.PropertyField(serializedObject.FindProperty("textureBind"), new GUIContent());
-                    }
-                    EditorGUILayout.EndHorizontal();
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("textureBind"), new GUIContent());
                 }
+                EditorGUILayout.EndHorizontal();
                 
                 EditorGUILayout.Space();
                 GUI.enabled = true && guiEnabled;

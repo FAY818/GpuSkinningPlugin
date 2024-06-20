@@ -40,7 +40,8 @@ public static class Constants
     public const string TEMP_SAVED_MESH_PATH = "GPUSkinning_Temp_Save_Mesh_Path";
     public const string TEMP_SAVED_SHADER_PATH = "GPUSkinning_Temp_Save_Shader_Path";
     public const string TEMP_SAVED_TEXTURE_PATH = "GPUSkinning_Temp_Save_Texture_Path";
-    public const string TEMP_SAVED_TEXTUREBIND_PATH = "GPUSkinning_Temp_Save_TextureBind_Path";
+    
+    public const string TEMP_SAVED_TEXTUREBIND_PATH = "GPUSkinning_Temp_Save_TextureBind_Path"; //
     
     // vertex
     public const string TEMP_SAVED_ANIM_VERTEX_PATH = "GPUSkinning_Temp_Save_Anim_vertex_Path";

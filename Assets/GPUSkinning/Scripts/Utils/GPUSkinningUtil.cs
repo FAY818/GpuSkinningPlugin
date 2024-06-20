@@ -268,23 +268,24 @@ public class GPUSkinningUtil
 
     public static Matrix4x4 MatrixMulFloat(Matrix4x4 matrix, float val)
     {
-        matrix.m00 *= val;
-        matrix.m01 *= val;
-        matrix.m02 *= val;
-        matrix.m03 *= val;
-        matrix.m10 *= val;
-        matrix.m11 *= val;
-        matrix.m12 *= val;
-        matrix.m13 *= val;
-        matrix.m20 *= val;
-        matrix.m21 *= val;
-        matrix.m22 *= val;
-        matrix.m23 *= val;
-        matrix.m30 *= val;
-        matrix.m31 *= val;
-        matrix.m32 *= val;
-        matrix.m33 *= val;
-        return matrix;
+        Matrix4x4 result = new Matrix4x4();
+        result.m00 = matrix.m00 * val;
+        result.m01 = matrix.m01 * val;
+        result.m02 = matrix.m02 * val;
+        result.m03 = matrix.m03 * val;
+        result.m10 = matrix.m10 * val;
+        result.m11 = matrix.m11 * val;
+        result.m12 = matrix.m12 * val;
+        result.m13 = matrix.m13 * val;
+        result.m20 = matrix.m20 * val;
+        result.m21 = matrix.m21 * val;
+        result.m22 = matrix.m22 * val;
+        result.m23 = matrix.m23 * val;
+        result.m30 = matrix.m30 * val;
+        result.m31 = matrix.m31 * val;
+        result.m32 = matrix.m32 * val;
+        result.m33 = matrix.m33 * val;
+        return result;
     }
 
     public static Matrix4x4 MatrixAddMatrix(Matrix4x4 matrix1, Matrix4x4 matrix2)
