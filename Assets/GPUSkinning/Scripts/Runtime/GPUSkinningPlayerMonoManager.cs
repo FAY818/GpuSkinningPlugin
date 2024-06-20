@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 管理 GPUSkinningPlayerResources，每个GPUSkinningPlayerResources可以对应多个播放器；
+/// 当注册播放器时，会返出相应的 GPUSkinningPlayerResources或者新建一个GPUSkinningPlayerResources与之关联
+/// </summary>
 public class GPUSkinningPlayerMonoManager
 {
     private List<GPUSkinningPlayerResources> items = new List<GPUSkinningPlayerResources>();

@@ -1,12 +1,16 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// 增强版列表，兼具Array、List、Stack的功能，自动扩容
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class GPUSkinningBetterList<T>
 {
     public T[] buffer;
 
     public int size = 0;
 
-    private int bufferIncrement = 0;
+    private int bufferIncrement = 0; // 容量
 
     // 索引器
     public T this[int i]
@@ -20,6 +24,7 @@ public class GPUSkinningBetterList<T>
         this.bufferIncrement = Mathf.Max(1, bufferIncrement);
     }
 
+    // 分配更多空间
     void AllocateMore()
     {
         T[] newList = (buffer != null) ? new T[buffer.Length + bufferIncrement] : new T[bufferIncrement];
@@ -78,7 +83,7 @@ public class GPUSkinningBetterList<T>
         {
             --size;
             buffer[index] = default(T);
-            for (int b = index; b < size; ++b) buffer[b] = buffer[b + 1];
+            for (int b = index; b < size; ++b) buffer[b] = buffer[b + 1]; // 所有index后数据前移 
             buffer[size] = default(T);
         }
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 管理在运行时依赖的本地资源
+/// 运行时依赖的资源
 /// </summary>
 public class GPUSkinningPlayerResources
 {
@@ -40,15 +40,14 @@ public class GPUSkinningPlayerResources
 
     public Texture textureBind = null;
 
-    public List<GPUSkinningPlayerMono> players = new List<GPUSkinningPlayerMono>(); // 播放器列表
+    public List<GPUSkinningPlayerMono> players = new List<GPUSkinningPlayerMono>(); // 所有基于本资源运行的动画播放器
 
     private CullingGroup cullingGroup = null;
 
     private GPUSkinningBetterList<BoundingSphere> cullingBounds = new GPUSkinningBetterList<BoundingSphere>(100);
 
-    private GPUSkinningMaterial[] mtrls = null; // 动画贴图数组
+    private GPUSkinningMaterial[] mtrls = null;
     
-    // 帧标记
     private GPUSkinningExecuteOncePerFrame executeOncePerFrame = new GPUSkinningExecuteOncePerFrame();
 
     // 动画正播放到的时间
@@ -334,7 +333,6 @@ public class GPUSkinningPlayerResources
         return (a + b) * bStart + (c + d) * bEnd;
     }
 
-
     /// <summary>
     /// 判定是否可以动画融合
     /// </summary>
@@ -342,6 +340,8 @@ public class GPUSkinningPlayerResources
     {
         return lastPlayedClip != null && crossFadeTime > 0 && crossFadeProgress <= crossFadeTime;
     }
+
+    #region Material
 
     /// <summary>
     /// 根据贴图的状态（关键词）获取动画贴图
@@ -354,7 +354,7 @@ public class GPUSkinningPlayerResources
     }
 
     /// <summary>
-    /// 初始化动画贴图
+    /// 初始化动画贴图，利用
     /// </summary>
     /// <param name="originalMaterial">导出的原始贴图</param>
     /// <param name="hideFlags"></param>
@@ -367,7 +367,7 @@ public class GPUSkinningPlayerResources
 
         mtrls = new GPUSkinningMaterial[(int)MaterialState.Count];
 
-        for (int i = 0; i < mtrls.Length; ++i)
+        for (int i = 0; i < mtrls.Length; ++i) // 利用同一模板，创建不同状态的贴图，不通状态通过关键字控制
         {
             mtrls[i] = new GPUSkinningMaterial() { material = new Material(originalMaterial) };
             mtrls[i].material.name = keywords[i];
@@ -396,4 +396,6 @@ public class GPUSkinningPlayerResources
             }
         }
     }
+
+    #endregion
 }

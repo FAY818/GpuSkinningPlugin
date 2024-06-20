@@ -429,7 +429,8 @@ public class GPUSkinningPlayer
                 lastPlayedClip, GetCrossFadeFrameIndex(), crossFadeTime, crossFadeProgress
             );
             mr.SetPropertyBlock(mpb); // 应用属性到shader中
-
+            
+            // 挂点驱动
             if (isInBleding)
             {
                 int frameIndexCrossFade = GetCrossFadeFrameIndex();
