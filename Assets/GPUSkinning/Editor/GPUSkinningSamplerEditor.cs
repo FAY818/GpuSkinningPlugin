@@ -75,6 +75,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private bool initialUpdate = true;
 
+    private bool createMountPoint = false;
+
     #endregion
 
     #region Life
@@ -114,6 +116,12 @@ public class GPUSkinningSamplerEditor : Editor
         }
 
         animType = sampler.animType;
+
+        if (animType == GPUSkinningAnimType.Vertices)
+        {
+            serializedObject.FindProperty("createMountPoint").boolValue = false;
+        }
+
         initialUpdate = false;
 
         string animPathKey, meshPathKey, mtrlPathKey, shaderPathKey, texturePathKey, textureBindPathKey;
@@ -214,6 +222,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
 
         sampler.MappingAnimationClips();
+        createMountPoint = sampler.createMountPoint;
         
         OnGUI_Sampler(sampler); // 采样
 
@@ -369,8 +378,10 @@ public class GPUSkinningSamplerEditor : Editor
                 GUI.enabled = false;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
                 GUI.enabled = true;
-                
+
+                GUI.enabled = animType == GPUSkinningAnimType.Skeleton;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("createMountPoint"), new GUIContent("Mount Point"));
+                GUI.enabled = true;
                 
                 OnGUI_AnimClips(sampler);
 
@@ -946,7 +957,10 @@ public class GPUSkinningSamplerEditor : Editor
 
                 EditorGUILayout.Space();
 
-                OnGUI_Joints();
+                if (createMountPoint)
+                {
+                    OnGUI_Joints();
+                }
             }
         }
         EndBox();

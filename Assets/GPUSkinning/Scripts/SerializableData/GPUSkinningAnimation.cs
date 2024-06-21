@@ -10,6 +10,8 @@ public class GPUSkinningAnimation : ScriptableObject
 
     public string name = null;
 
+    public bool createMountPoint = false;
+
     public GPUSkinningAnimType gpuSkinningAnimType = GPUSkinningAnimType.Skeleton;
     
     public GPUSkinningBone[] bones = null;

@@ -40,6 +40,8 @@ public class GPUSkinningPlayer
     private MaterialPropertyBlock mpb = null;
 
     private int rootMotionFrameIndex = -1;
+    
+    private bool createMountPoint = false;
 
     public event OnAnimEvent onAnimEvent;
 
@@ -206,7 +208,11 @@ public class GPUSkinningPlayer
 
         mpb = new MaterialPropertyBlock();
 
-        ConstructJoints();
+        createMountPoint = res.anim.createMountPoint;
+        if (createMountPoint)
+        {
+            ConstructJoints();
+        }
     }
 
     #region 外部接口
@@ -430,20 +436,23 @@ public class GPUSkinningPlayer
             );
             mr.SetPropertyBlock(mpb); // 应用属性到shader中
             
-            // 挂点驱动
-            if (isInBleding)
+            if (createMountPoint)
             {
-                int frameIndexCrossFade = GetCrossFadeFrameIndex();
-                int nextIndexCrossFade = GetNextCrossFadeFrameIndex();
-                GPUSkinningFrame frameCrossFade = lastPlayedClip.frames[frameIndexCrossFade];
-                GPUSkinningFrame nextFrameCrossFade = lastPlayedClip.frames[nextIndexCrossFade];
-                float crossFadeBlendFactor = res.GetBlendFactor(crossFadeProgress, crossFadeTime);
-                UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, lastInterpolationFactor, interpolationFactor,
-                    crossFadeBlendFactor);
-            }
-            else
-            {
-                UpdateJoints(frame, nextFrame, interpolationFactor);
+                // 挂点驱动
+                if (isInBleding)
+                {
+                    int frameIndexCrossFade = GetCrossFadeFrameIndex();
+                    int nextIndexCrossFade = GetNextCrossFadeFrameIndex();
+                    GPUSkinningFrame frameCrossFade = lastPlayedClip.frames[frameIndexCrossFade];
+                    GPUSkinningFrame nextFrameCrossFade = lastPlayedClip.frames[nextIndexCrossFade];
+                    float crossFadeBlendFactor = res.GetBlendFactor(crossFadeProgress, crossFadeTime);
+                    UpdateJointsCrossFade(frameCrossFade, nextFrameCrossFade, frame, nextFrame, lastInterpolationFactor, interpolationFactor,
+                        crossFadeBlendFactor);
+                }
+                else
+                {
+                    UpdateJoints(frame, nextFrame, interpolationFactor);
+                }
             }
         }
 

@@ -588,8 +588,9 @@ public class GPUSkinningSampler : MonoBehaviour
         {
             ClearFrameMatrixInScriptObject();
         }
-        
+        gpuSkinningAnimation.createMountPoint = createMountPoint;
         anim = gpuSkinningAnimation;
+        
         AssetDatabase.Refresh();
         AssetDatabase.SaveAssets();
         
@@ -631,13 +632,12 @@ public class GPUSkinningSampler : MonoBehaviour
         /////////////////////////Shader/Material/////////////////////////
         CreateVertShaderAndMaterial(dir);
         
-        // Todo：清除工作
         ClearSkinningBones();
         if (!createMountPoint)
         {
             ClearFrameMatrixInScriptObject();
         }
-
+        gpuSkinningAnimation.createMountPoint = createMountPoint;
         anim = gpuSkinningAnimation;
         AssetDatabase.Refresh();
         AssetDatabase.SaveAssets();
