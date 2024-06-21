@@ -73,6 +73,8 @@ public class GPUSkinningSamplerEditor : Editor
 
     private GPUSkinningAnimType animType;
 
+    private bool initialUpdate = true;
+
     #endregion
 
     #region Life
@@ -81,10 +83,6 @@ public class GPUSkinningSamplerEditor : Editor
     {
         EditorApplication.update += UpdateHandler;
         time = Time.realtimeSinceStartup;
-        
-        // 加载本地依赖资源
-        LoadAssets();
-        
         // 读取编辑器默认折叠配置
         isBoundsFoldout = PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_BOUNDS, true);
         isJointsFoldout =  PrefsManager.GetEditorBool(Constants.EDITOR_PREFS_KEY_Joints, true);
@@ -95,130 +93,118 @@ public class GPUSkinningSamplerEditor : Editor
         rootMotionEnabled = true;
     }
 
+    /// <summary>
+    /// 根据采样动画类型加载对应的生成资源（如果本地存在)
+    /// </summary>
     private void LoadAssets()
     {
-        GPUSkinningSampler sampler = target as GPUSkinningSampler;
-        if (animType == sampler.animType)
+        if (Application.isPlaying)
+            return;
+
+        string animName = serializedObject.FindProperty("animName").stringValue;
+        if (string.IsNullOrEmpty(animName))
         {
             return;
         }
+
+        GPUSkinningSampler sampler = target as GPUSkinningSampler;
+        if (animType == sampler.animType && !initialUpdate)
+        {
+            return;
+        }
+
         animType = sampler.animType;
-        
-        switch (animType)
+        initialUpdate = false;
+
+        string animPathKey, meshPathKey, mtrlPathKey, shaderPathKey, texturePathKey, textureBindPathKey;
+
+        animPathKey = animType == GPUSkinningAnimType.Skeleton
+            ? Constants.TEMP_SAVED_ANIM_PATH + animName
+            : Constants.TEMP_SAVED_ANIM_VERTEX_PATH + animName;
+        meshPathKey = animType == GPUSkinningAnimType.Skeleton
+            ? Constants.TEMP_SAVED_MESH_PATH + animName
+            : Constants.TEMP_SAVED_MESH_VERTEX_PATH + animName;
+        mtrlPathKey = animType == GPUSkinningAnimType.Skeleton
+            ? Constants.TEMP_SAVED_MTRL_PATH + animName
+            : Constants.TEMP_SAVED_MTRL_VERTEX_PATH + animName;
+        shaderPathKey = animType == GPUSkinningAnimType.Skeleton
+            ? Constants.TEMP_SAVED_SHADER_PATH + animName
+            : Constants.TEMP_SAVED_SHADER_VERTEX_PATH + animName;
+        texturePathKey = animType == GPUSkinningAnimType.Skeleton
+            ? Constants.TEMP_SAVED_TEXTURE_PATH + animName
+            : Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH + animName;
+        textureBindPathKey = Constants.TEMP_SAVED_TEXTUREBIND_PATH + animName;
+
+        Object obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(animPathKey));
+        if (obj != null && obj is GPUSkinningAnimation)
         {
-            case GPUSkinningAnimType.Skeleton:
-                LoadSkeletonAssets();
-                break;
-            case GPUSkinningAnimType.Vertices:
-                LoadVertexAssets();
-                break;
-            default:
-                Debug.LogError("Unsupported anim type.");
-                break;
+            serializedObject.FindProperty("anim").objectReferenceValue = obj;
         }
-    }
-
-    private void LoadSkeletonAssets()
-    {
-        if (!Application.isPlaying)
+        else
         {
-            Object obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_ANIM_PATH));
-            if (obj != null && obj is GPUSkinningAnimation)
-            {
-                serializedObject.FindProperty("anim").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MESH_PATH));
-            if (obj != null && obj is Mesh)
-            {
-                serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MTRL_PATH));
-            if (obj != null && obj is Material)
-            {
-                serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_SHADER_PATH));
-            if (obj != null && obj is Shader)
-            {
-                serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
-            }
-            
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTURE_PATH));
-            if(obj != null && obj is TextAsset)
-            {
-                serializedObject.FindProperty("texture").objectReferenceValue = obj;
-            }
-            
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH));
-            if(obj != null && obj is TextAsset)
-            {
-                serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
-            }
-
-            serializedObject.ApplyModifiedProperties();
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_ANIM_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MESH_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MTRL_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_SHADER_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTURE_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTUREBIND_PATH);
+            serializedObject.FindProperty("anim").objectReferenceValue = null;
         }
+
+        obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(meshPathKey));
+        if (obj != null && obj is Mesh)
+        {
+            serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
+        }
+        else
+        {
+            serializedObject.FindProperty("savedMesh").objectReferenceValue = null;
+        }
+
+        obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(mtrlPathKey));
+        if (obj != null && obj is Material)
+        {
+            serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
+        }
+        else
+        {
+            serializedObject.FindProperty("savedMtrl").objectReferenceValue = null;
+        }
+
+        obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(shaderPathKey));
+        if (obj != null && obj is Shader)
+        {
+            serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
+        }
+        else
+        {
+            serializedObject.FindProperty("savedShader").objectReferenceValue = null;
+        }
+
+        obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(texturePathKey));
+        if (obj != null && obj is TextAsset)
+        {
+            serializedObject.FindProperty("texture").objectReferenceValue = obj;
+        }
+        else
+        {
+            serializedObject.FindProperty("texture").objectReferenceValue = null;
+        }
+
+        obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(textureBindPathKey));
+        if (obj != null && obj is TextAsset)
+        {
+            serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
+        }
+        else
+        {
+            serializedObject.FindProperty("textureBind").objectReferenceValue = null;
+        }
+
+        serializedObject.ApplyModifiedProperties();
+
+        // PrefsManager.DeleteKey(animPathKey);
+        // PrefsManager.DeleteKey(meshPathKey);
+        // PrefsManager.DeleteKey(mtrlPathKey);
+        // PrefsManager.DeleteKey(shaderPathKey);
+        // PrefsManager.DeleteKey(texturePathKey);
+        // PrefsManager.DeleteKey(textureBindPathKey);
     }
     
-    private void LoadVertexAssets()
-    {
-        if (!Application.isPlaying)
-        {
-            Object obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_ANIM_VERTEX_PATH));
-            if (obj != null && obj is GPUSkinningAnimation)
-            {
-                serializedObject.FindProperty("anim").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH));
-            if (obj != null && obj is Mesh)
-            {
-                serializedObject.FindProperty("savedMesh").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_MTRL_VERTEX_PATH));
-            if (obj != null && obj is Material)
-            {
-                serializedObject.FindProperty("savedMtrl").objectReferenceValue = obj;
-            }
-
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_SHADER_VERTEX_PATH));
-            if (obj != null && obj is Shader)
-            {
-                serializedObject.FindProperty("savedShader").objectReferenceValue = obj;
-            }
-            
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH));
-            if(obj != null && obj is TextAsset)
-            {
-                serializedObject.FindProperty("texture").objectReferenceValue = obj;
-            }
-            
-            obj = AssetDatabase.LoadMainAssetAtPath(PrefsManager.GetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH));
-            if(obj != null && obj is TextAsset)
-            {
-                serializedObject.FindProperty("textureBind").objectReferenceValue = obj;
-            }
-            
-            serializedObject.ApplyModifiedProperties();
-            
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_ANIM_VERTEX_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MESH_VERTEX_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_MTRL_VERTEX_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_SHADER_VERTEX_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH);
-            PrefsManager.DeleteKey(Constants.TEMP_SAVED_TEXTUREBIND_PATH);
-        }
-    }
-
     public override void OnInspectorGUI ()
     {
         GPUSkinningSampler sampler = target as GPUSkinningSampler;
@@ -244,6 +230,7 @@ public class GPUSkinningSamplerEditor : Editor
         EditorApplication.update -= UpdateHandler;
         EditorUtility.ClearProgressBar();
         DestroyPreview();
+        initialUpdate = true;
     }
     
     private void UpdateHandler()
@@ -370,14 +357,18 @@ public class GPUSkinningSamplerEditor : Editor
 
                 // 下拉栏
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("animType"), new GUIContent("Anim Type"));
-                
+
+                GUI.enabled = false;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("skinQuality"), new GUIContent("Quality"));
 
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("shaderType"), new GUIContent("Shader Type"));
-
+                GUI.enabled = true;
+                
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("rootBoneTransform"), new GUIContent("Root Bone"));
 
+                GUI.enabled = false;
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
+                GUI.enabled = true;
                 
                 OnGUI_AnimClips(sampler);
 
@@ -597,25 +588,29 @@ public class GPUSkinningSamplerEditor : Editor
                                 }
                                 if(j == 3)
                                 {
+                                    GUI.enabled = false;
                                     EditorGUILayout.BeginHorizontal();
                                     GUILayout.FlexibleSpace();
                                     prop4.boolValue = GUILayout.Toggle(prop4.boolValue, string.Empty);
                                     GUILayout.FlexibleSpace();
                                     EditorGUILayout.EndHorizontal();
+                                    GUI.enabled = true;
                                 }
                                 if (j == 4)
                                 {
+                                    GUI.enabled = false;
                                     EditorGUILayout.BeginHorizontal();
                                     GUILayout.FlexibleSpace();
-                                    GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
+                                    //GUI.enabled = prop2.enumValueIndex == 1 && guiEnabled;
                                     prop5.boolValue = GUILayout.Toggle(prop5.boolValue, string.Empty);
                                     if(!GUI.enabled)
                                     {
                                         prop5.boolValue = false;
                                     }
-                                    GUI.enabled = true && guiEnabled;
+                                    //GUI.enabled = true && guiEnabled;
                                     GUILayout.FlexibleSpace();
                                     EditorGUILayout.EndHorizontal();
+                                    GUI.enabled = true;
                                 }
                             }
                         }

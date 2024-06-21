@@ -553,7 +553,7 @@ public class GPUSkinningSampler : MonoBehaviour
         {
             AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
         }
-        PrefsManager.SetString(Constants.TEMP_SAVED_ANIM_PATH, savedAnimPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_ANIM_PATH + animName, savedAnimPath);
 
         /////////////////////////Texture/////////////////////////
         CreateBindTexture(dir, gpuSkinningAnimation);
@@ -570,7 +570,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
             string savedMeshPath = dir + "/GPUSkinning_SkeletonMesh_" + animName + ".asset";
             AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-            PrefsManager.SetString(Constants.TEMP_SAVED_MESH_PATH, savedMeshPath);
+            PrefsManager.SetString(Constants.TEMP_SAVED_MESH_PATH + animName, savedMeshPath);
             savedMesh = newMesh;
             CreateLODMeshes(newMesh.bounds, dir);
 
@@ -599,7 +599,7 @@ public class GPUSkinningSampler : MonoBehaviour
         {
             AssetDatabase.CreateAsset(gpuSkinningAnimation, savedAnimPath);
         }
-        PrefsManager.SetString(Constants.TEMP_SAVED_ANIM_VERTEX_PATH, savedAnimPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_ANIM_VERTEX_PATH + animName, savedAnimPath);
 
         /////////////////////////Texture/////////////////////////
         CreateBindTexture(dir, gpuSkinningAnimation);
@@ -616,7 +616,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
             string savedMeshPath = dir + "/GPUSkinning_VertMesh_" + animName + ".asset";
             AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-            PrefsManager.SetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH, savedMeshPath);
+            PrefsManager.SetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH + animName, savedMeshPath);
             savedMesh = newMesh;
             CreateLODMeshes(newMesh.bounds, dir);
 
@@ -1278,7 +1278,7 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
 
-        PrefsManager.SetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH, savedPathBind);
+        PrefsManager.SetString(Constants.TEMP_SAVED_TEXTUREBIND_PATH + animName, savedPathBind);
     }
     
     private void CreateSkeletonTexture(string dir, GPUSkinningAnimation gpuSkinningAnim)
@@ -1337,7 +1337,7 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
 
-        PrefsManager.SetString(Constants.TEMP_SAVED_TEXTURE_PATH, savedPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_TEXTURE_PATH + animName, savedPath);
     }
 
     private void CreateVertexTexture(string dir, GPUSkinningAnimation gpuSkinningAnim, Mesh mesh)
@@ -1423,7 +1423,7 @@ public class GPUSkinningSampler : MonoBehaviour
             fileStream.Dispose();
         }
 
-        PrefsManager.SetString(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH, savedPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_TEXTURE_VERTEX_PATH + animName, savedPath);
     }
 
     #endregion
@@ -1445,7 +1445,7 @@ public class GPUSkinningSampler : MonoBehaviour
             shaderStr = SkinQualityShaderStr(shaderStr);
             string shaderPath = dir + "/GPUSKinning_Shader_" + animName + ".shader";
             File.WriteAllText(shaderPath, shaderStr);
-            PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_PATH, shaderPath);
+            PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_PATH + animName, shaderPath);
             AssetDatabase.ImportAsset(shaderPath);
             shader = AssetDatabase.LoadMainAssetAtPath(shaderPath) as Shader;
         }
@@ -1460,7 +1460,7 @@ public class GPUSkinningSampler : MonoBehaviour
                 skinQuality == GPUSkinningQuality.Bone2 ? 2 :
                 skinQuality == GPUSkinningQuality.Bone4 ? 4 : 1;
             shader = Shader.Find(shaderName);
-            PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_PATH, AssetDatabase.GetAssetPath(shader));
+            PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_PATH + animName, AssetDatabase.GetAssetPath(shader));
         }
 
         Material mtrl = new Material(shader);
@@ -1471,7 +1471,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
         string savedMtrlPath = dir + "/GPUSKinning_SkeletonMaterial_" + animName + ".mat";
         AssetDatabase.CreateAsset(mtrl, savedMtrlPath);
-        PrefsManager.SetString(Constants.TEMP_SAVED_MTRL_PATH, savedMtrlPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_MTRL_PATH + animName, savedMtrlPath);
     }
     private void CreateVertShaderAndMaterial(string dir)
     {
@@ -1488,7 +1488,7 @@ public class GPUSkinningSampler : MonoBehaviour
                 shaderType == GPUSkinningShaderType.StandardSpecular ? "" :
                 shaderType == GPUSkinningShaderType.StandardMetallic ? "" : string.Empty;
             shader = Shader.Find(shaderName);
-            PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_VERTEX_PATH, AssetDatabase.GetAssetPath(shader));
+            PrefsManager.SetString(Constants.TEMP_SAVED_SHADER_VERTEX_PATH + animName, AssetDatabase.GetAssetPath(shader));
         }
 
         Material mtrl = new Material(shader);
@@ -1499,7 +1499,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
         string savedMtrlPath = dir + "/GPUSKinning_VertMaterial_" + animName + ".mat";
         AssetDatabase.CreateAsset(mtrl, savedMtrlPath);
-        PrefsManager.SetString(Constants.TEMP_SAVED_MTRL_VERTEX_PATH, savedMtrlPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_MTRL_VERTEX_PATH + animName, savedMtrlPath);
     }
 
     private string SkinQualityShaderStr(string shaderStr)
