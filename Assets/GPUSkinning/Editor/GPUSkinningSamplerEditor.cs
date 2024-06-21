@@ -370,6 +370,8 @@ public class GPUSkinningSamplerEditor : Editor
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("createNewShader"), new GUIContent("New Shader"));
                 GUI.enabled = true;
                 
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("createMountPoint"), new GUIContent("Mount Point"));
+                
                 OnGUI_AnimClips(sampler);
 
                 OnGUI_LOD(sampler);

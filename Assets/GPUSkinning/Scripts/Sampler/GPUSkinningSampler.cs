@@ -19,7 +19,6 @@ using UnityEditor;
 public class GPUSkinningSampler : MonoBehaviour
 {
 #if UNITY_EDITOR
-
     #region Properties
     
     //////////////////////////////////持久化保存文件///////////////////////////////
@@ -67,6 +66,10 @@ public class GPUSkinningSampler : MonoBehaviour
     [HideInInspector] 
     [SerializeField] 
     public bool createNewShader = false;
+    
+    [HideInInspector] 
+    [SerializeField] 
+    public bool createMountPoint = false;
     
     //////////////////////////////////animClip///////////////////////////////
     [HideInInspector] 
@@ -162,42 +165,10 @@ public class GPUSkinningSampler : MonoBehaviour
                 animator.StopPlayback();
             }
             
-            string savePath = null;
-            if (anim == null)
-            {
-                savePath = EditorUtility.SaveFolderPanel("GPUSkinning Sampler Save",
-                    PlayerPrefs.GetString(Constants.USER_PREFS_DIR, Application.dataPath), animName);
-            }
-            else
-            {
-                string animPath = AssetDatabase.GetAssetPath(anim);
-                savePath = new FileInfo(animPath).Directory.FullName.Replace('\\', '/');
-            }
-            
-            if (string.IsNullOrEmpty(savePath))
-                return;
-
-            if (!savePath.Contains(Application.dataPath.Replace('\\', '/')))
-            {
-                ShowDialog("Must select a directory in the project's Asset folder.");
-                return;
-            }
-
-            PrefsManager.SetString(Constants.USER_PREFS_DIR, savePath);
-            string dir = "Assets" + savePath.Substring(Application.dataPath.Length);
-            
-            if (animType == GPUSkinningAnimType.Skeleton)
-            {
-                CreateSkeletonAnimFile(dir);
-            }
-            else if (animType == GPUSkinningAnimType.Vertices)
-            {
-                CreateVertexAnimFile(dir);
-            }
-            
             isSampling = false;
             return;
         }
+        
         GPUSkinningFrame frame = SetSampleSate(totalFrames);
         
         if (animType == GPUSkinningAnimType.Skeleton)
@@ -209,7 +180,43 @@ public class GPUSkinningSampler : MonoBehaviour
             StartCoroutine(VertexSamplingCoroutine(frame, totalFrames));
         }
     }
-    
+
+    private void CreateFile()
+    {
+        string savePath = null;
+        if (anim == null)
+        {
+            savePath = EditorUtility.SaveFolderPanel("GPUSkinning Sampler Save",
+                PlayerPrefs.GetString(Constants.USER_PREFS_DIR, Application.dataPath), animName);
+        }
+        else
+        {
+            string animPath = AssetDatabase.GetAssetPath(anim);
+            savePath = new FileInfo(animPath).Directory.FullName.Replace('\\', '/');
+        }
+            
+        if (string.IsNullOrEmpty(savePath))
+            return;
+
+        if (!savePath.Contains(Application.dataPath.Replace('\\', '/')))
+        {
+            ShowDialog("Must select a directory in the project's Asset folder.");
+            return;
+        }
+
+        PrefsManager.SetString(Constants.USER_PREFS_DIR, savePath);
+        string dir = "Assets" + savePath.Substring(Application.dataPath.Length);
+            
+        if (animType == GPUSkinningAnimType.Skeleton)
+        {
+            CreateSkeletonAnimFile(dir);
+        }
+        else if (animType == GPUSkinningAnimType.Vertices)
+        {
+            CreateVertexAnimFile(dir);
+        }
+    }
+
     #endregion
 
     #region AnimationClip
@@ -501,6 +508,7 @@ public class GPUSkinningSampler : MonoBehaviour
     /// </summary>
     public void EndSample()
     {
+        CreateFile();
         samplingClipIndex = -1;
     }
     public bool IsSamplingProgress()
@@ -559,32 +567,34 @@ public class GPUSkinningSampler : MonoBehaviour
         CreateBindTexture(dir, gpuSkinningAnimation);
         CreateSkeletonTexture(dir, gpuSkinningAnimation); // 骨骼矩阵贴图
 
-        if (samplingClipIndex == 0) // 采样第一个AnimClip时执行
+        /////////////////////////Mesh/////////////////////////
+        Mesh newMesh = CreateSkeletonMesh(smr.sharedMesh, "GPUSkinning_SkeletonMesh");
+        if (savedMesh != null)
         {
-            /////////////////////////Mesh/////////////////////////
-            Mesh newMesh = CreateSkeletonMesh(smr.sharedMesh, "GPUSkinning_SkeletonMesh");
-            if (savedMesh != null)
-            {
-                newMesh.bounds = savedMesh.bounds;
-            }
-
-            string savedMeshPath = dir + "/GPUSkinning_SkeletonMesh_" + animName + ".asset";
-            AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-            PrefsManager.SetString(Constants.TEMP_SAVED_MESH_PATH + animName, savedMeshPath);
-            savedMesh = newMesh;
-            CreateLODMeshes(newMesh.bounds, dir);
-
-            /////////////////////////Shader/Material/////////////////////////
-            CreateSkeletonShaderAndMaterial(dir);
-
-            /////////////////////////Prefab/////////////////////////
-            CreateSkeletonPrefab(dir);
+            newMesh.bounds = savedMesh.bounds;
         }
 
+        string savedMeshPath = dir + "/GPUSkinning_SkeletonMesh_" + animName + ".asset";
+        AssetDatabase.CreateAsset(newMesh, savedMeshPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_MESH_PATH + animName, savedMeshPath);
+        savedMesh = newMesh;
+        CreateLODMeshes(newMesh.bounds, dir);
+
+        /////////////////////////Shader/Material/////////////////////////
+        CreateSkeletonShaderAndMaterial(dir);
+        
         ClearSkinningBones();
+        if (!createMountPoint)
+        {
+            ClearFrameMatrixInScriptObject();
+        }
+        
         anim = gpuSkinningAnimation;
         AssetDatabase.Refresh();
         AssetDatabase.SaveAssets();
+        
+        /////////////////////////Prefab/////////////////////////
+        CreateSkeletonPrefab(dir);
     }
 
     private void CreateVertexAnimFile(string dir)
@@ -605,33 +615,35 @@ public class GPUSkinningSampler : MonoBehaviour
         CreateBindTexture(dir, gpuSkinningAnimation);
         CreateVertexTexture(dir, gpuSkinningAnimation, smr.sharedMesh);
 
-        if (samplingClipIndex == 0) // 采样第一个AnimClip时执行
+        /////////////////////////Mesh/////////////////////////
+        Mesh newMesh = CreateVertMesh(smr.sharedMesh, "GPUSkinning_VertMesh");
+        if (savedMesh != null)
         {
-            /////////////////////////Mesh/////////////////////////
-            Mesh newMesh = CreateVertMesh(smr.sharedMesh, "GPUSkinning_VertMesh");
-            if (savedMesh != null)
-            {
-                newMesh.bounds = savedMesh.bounds;
-            }
-
-            string savedMeshPath = dir + "/GPUSkinning_VertMesh_" + animName + ".asset";
-            AssetDatabase.CreateAsset(newMesh, savedMeshPath);
-            PrefsManager.SetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH + animName, savedMeshPath);
-            savedMesh = newMesh;
-            CreateLODMeshes(newMesh.bounds, dir);
-
-            /////////////////////////Shader/Material/////////////////////////
-            CreateVertShaderAndMaterial(dir);
-
-            /////////////////////////Prefab/////////////////////////
-            CreateVertexPrefab(dir);
+            newMesh.bounds = savedMesh.bounds;
         }
 
+        string savedMeshPath = dir + "/GPUSkinning_VertMesh_" + animName + ".asset";
+        AssetDatabase.CreateAsset(newMesh, savedMeshPath);
+        PrefsManager.SetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH + animName, savedMeshPath);
+        savedMesh = newMesh;
+        CreateLODMeshes(newMesh.bounds, dir);
+
+        /////////////////////////Shader/Material/////////////////////////
+        CreateVertShaderAndMaterial(dir);
+        
         // Todo：清除工作
         ClearSkinningBones();
+        if (!createMountPoint)
+        {
+            ClearFrameMatrixInScriptObject();
+        }
+
         anim = gpuSkinningAnimation;
         AssetDatabase.Refresh();
         AssetDatabase.SaveAssets();
+        
+        /////////////////////////Prefab/////////////////////////
+        CreateVertexPrefab(dir);
     }
     
     private IEnumerator SkeletonSamplingCoroutine(GPUSkinningFrame frame, int totalFrames)
@@ -1011,6 +1023,25 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
 
+    // 如果不导出挂点，清除不不必要的矩阵
+    private void ClearFrameMatrixInScriptObject()
+    {
+        if (gpuSkinningAnimation == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < gpuSkinningAnimation.clips.Length; ++i)
+        {
+            GPUSkinningClip clip = gpuSkinningAnimation.clips[i];
+            for (int j = 0; j < clip.frames.Length; ++j)
+            {
+                GPUSkinningFrame frame = clip.frames[j];
+                frame.matrices = null;
+            }
+        }
+    }
+
     #endregion
 
     #region Mesh
@@ -1305,7 +1336,6 @@ public class GPUSkinningSampler : MonoBehaviour
                     Debug.LogError("Set wrong RootBone");
                     return;
                 }
-
                 //逐骨骼
                 for (int matrixIndex = 0; matrixIndex < numMatrices; ++matrixIndex)
                 {

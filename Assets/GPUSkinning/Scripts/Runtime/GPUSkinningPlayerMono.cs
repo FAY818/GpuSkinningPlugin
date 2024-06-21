@@ -39,7 +39,7 @@ public class GPUSkinningPlayerMono : MonoBehaviour
 
     [HideInInspector]
     [SerializeField]
-    private bool lodEnabled = true;
+    private bool lodEnabled = false;
 
     [HideInInspector]
     [SerializeField]
