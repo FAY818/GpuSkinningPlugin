@@ -170,7 +170,12 @@ public class GPUSkinningSampler : MonoBehaviour
         }
         
         GPUSkinningFrame frame = SetSampleSate(totalFrames);
-        
+
+        if ((samplingFrameIndex == 0) && (samplingClipIndex == 0))
+        {
+            StartCoroutine(MeshBoundsReferenceMatrix());
+        }
+
         if (animType == GPUSkinningAnimType.Skeleton)
         {
             StartCoroutine(SkeletonSamplingCoroutine(frame, totalFrames));
@@ -181,7 +186,7 @@ public class GPUSkinningSampler : MonoBehaviour
         }
     }
 
-    private void CreateFile()
+    private void CreateDependentFile()
     {
         string savePath = null;
         if (anim == null)
@@ -508,7 +513,7 @@ public class GPUSkinningSampler : MonoBehaviour
     /// </summary>
     public void EndSample()
     {
-        CreateFile();
+        CreateDependentFile();
         samplingClipIndex = -1;
     }
     public bool IsSamplingProgress()
@@ -646,6 +651,35 @@ public class GPUSkinningSampler : MonoBehaviour
         CreateVertexPrefab(dir);
     }
     
+    private IEnumerator MeshBoundsReferenceMatrix()
+    {
+        yield return new WaitForEndOfFrame();
+        
+        GPUSkinningBone[] bones = gpuSkinningAnimation.bones;
+        int numBones = bones.Length;
+        gpuSkinningAnimation.boundsMatrices = new Matrix4x4[numBones];
+        // 采样每根骨骼的模型空间变换矩阵
+        for(int i = 0; i < numBones; ++i)
+        {
+            GPUSkinningBone currentBone = bones[i];
+            gpuSkinningAnimation.boundsMatrices[i] = currentBone.bindpose;
+            do
+            {
+                Matrix4x4 mat = Matrix4x4.TRS(currentBone.transform.localPosition, currentBone.transform.localRotation, currentBone.transform.localScale);
+                gpuSkinningAnimation.boundsMatrices[i] = mat * gpuSkinningAnimation.boundsMatrices[i];
+                if (currentBone.parentBoneIndex == -1)
+                {
+                    break;
+                }
+                else
+                {
+                    currentBone = bones[currentBone.parentBoneIndex];
+                }
+            }
+            while (true);
+        }
+    }
+
     private IEnumerator SkeletonSamplingCoroutine(GPUSkinningFrame frame, int totalFrames)
     {
         yield return new WaitForEndOfFrame();
@@ -956,11 +990,14 @@ public class GPUSkinningSampler : MonoBehaviour
     
     private void CreateScriptObject(Mesh mesh, int numFrames)
     {
-        gpuSkinningAnimation = anim == null ? ScriptableObject.CreateInstance<GPUSkinningAnimation>() : anim;
-        gpuSkinningAnimation.name = animName;
-        if (anim == null)
+        if (gpuSkinningAnimation == null)
         {
-            gpuSkinningAnimation.guid = Guid.NewGuid().ToString();   
+            gpuSkinningAnimation = anim == null ? ScriptableObject.CreateInstance<GPUSkinningAnimation>() : anim;
+            gpuSkinningAnimation.name = animName;
+            if (anim == null)
+            {
+                gpuSkinningAnimation.guid = Guid.NewGuid().ToString();   
+            }
         }
         
         /////////////////////////骨骼/////////////////////////
@@ -1045,7 +1082,7 @@ public class GPUSkinningSampler : MonoBehaviour
     #endregion
 
     #region Mesh
-
+    
     /// <summary>
     /// 骨骼的权重和索引分别在2个UV中保存
     /// </summary>

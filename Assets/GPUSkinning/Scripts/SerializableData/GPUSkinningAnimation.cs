@@ -37,6 +37,8 @@ public class GPUSkinningAnimation : ScriptableObject
 
     public int bindTextureHeight = 0;
 
+    public Matrix4x4[] boundsMatrices; // 计算包围盒的参考矩阵
+
     public float[] lodDistances = null;
 
     public Mesh[] lodMeshes = null;

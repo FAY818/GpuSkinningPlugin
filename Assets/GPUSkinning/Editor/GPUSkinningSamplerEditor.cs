@@ -748,6 +748,128 @@ public class GPUSkinningSamplerEditor : Editor
 
     #region Preview
     
+    private void OnGUI_Preview(GPUSkinningSampler sampler)
+    {
+        BeginBox();
+        {
+            if (GUILayout.Button("Preview/Edit"))
+            {
+                anim = sampler.anim;
+                mesh = sampler.savedMesh;
+                mtrl = sampler.savedMtrl;
+                texture = sampler.texture;
+                textureBind = sampler.textureBind;
+                if (mesh != null)
+                {
+                    bounds = mesh.bounds;
+                }
+                if (anim == null || mesh == null || mtrl == null || texture == null || textureBind == null)
+                {
+                    EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
+                }
+                else
+                {
+                    if (rt == null && !EditorApplication.isPlaying)
+                    {
+                        linearToGammeMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_LinearToGamma"));
+                        linearToGammeMtrl.hideFlags = HideFlags.HideAndDontSave;
+
+                        rt = new RenderTexture(1024, 1024, 32, RenderTextureFormat.Default, RenderTextureReadWrite.Default);
+                        rt.hideFlags = HideFlags.HideAndDontSave;
+
+                        if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                        {
+                            rtGamma = new RenderTexture(512, 512, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
+                            rtGamma.hideFlags = HideFlags.HideAndDontSave;
+                        }
+
+                        // 预览相机
+                        GameObject camGo = new GameObject("GPUSkinningSamplerEditor_CameraGo");
+                        camGo.hideFlags = HideFlags.HideAndDontSave;
+                        cam = camGo.AddComponent<Camera>();
+                        cam.hideFlags = HideFlags.HideAndDontSave;
+                        cam.farClipPlane = 100;
+                        cam.targetTexture = rt;
+                        cam.enabled = false;
+                        cam.clearFlags = CameraClearFlags.SolidColor;
+                        cam.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1);
+                        camGo.transform.position = new Vector3(999, 1002, 999);
+
+                        previewClipIndex = 0;
+                        
+                        // 预览预制体
+                        GameObject previewGo = new GameObject("GPUSkinningPreview_Go");
+                        previewGo.hideFlags = HideFlags.HideAndDontSave;
+                        previewGo.transform.position = new Vector3(999, 999, 1002);
+                        preview = previewGo.AddComponent<GPUSkinningPlayerMono>();
+                        preview.hideFlags = HideFlags.HideAndDontSave;
+                        preview.Init(anim, mesh, mtrl, texture, textureBind);
+                        preview.Player.RootMotionEnabled = rootMotionEnabled;
+                        preview.Player.LODEnabled = false;
+                        preview.Player.CullingMode = GPUSKinningCullingMode.AlwaysAnimate;
+                    }
+                }
+            }
+            GetLastGUIRect(ref previewEditBtnRect); // 最后一个绘制的UI Rect
+
+            if (rt != null)
+            {
+                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
+                EditorGUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.BeginVertical();
+                    {
+                        if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                        {
+                            // 将当前渲染目标从线性转为伽马，更适合人眼观察
+                            RenderTexture tempRT = RenderTexture.active; 
+                            Graphics.Blit(rt, rtGamma, linearToGammeMtrl);
+                            RenderTexture.active = tempRT; 
+                            GUILayout.Box(rtGamma, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        }
+                        else
+                        {
+                            GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
+                        }
+                        GetLastGUIRect(ref interactionRect);
+                        PreviewInteraction(interactionRect);
+
+                        EditorGUILayout.HelpBox("Drag to Orbit\nCtrl + Drag to Pitch\nAlt+ Drag to Zoom\nPress P Key to Pause", MessageType.None);
+                    }
+                    EditorGUILayout.EndVertical();
+
+                    EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.Player.NormalizedTime, string.Empty);
+
+                    GUILayout.FlexibleSpace();
+                }
+                EditorGUILayout.EndHorizontal();
+
+                OnGUI_PreviewClipsOptions();
+
+                OnGUI_AnimTimeline();
+
+                EditorGUILayout.Space();
+                
+                OnGUI_RootMotion();
+
+                EditorGUILayout.Space();
+
+                OnGUI_EditBounds();
+
+                EditorGUILayout.Space();
+
+                if (createMountPoint)
+                {
+                    OnGUI_Joints();
+                }
+            }
+        }
+        EndBox();
+
+        serializedObject.ApplyModifiedProperties();
+    }
+    
     private void DestroyPreview()
     {
         if (rt != null)
@@ -813,6 +935,279 @@ public class GPUSkinningSamplerEditor : Editor
         }
     }
     
+    private void OnGUI_PreviewClipsOptions()
+    {
+        if(anim.clips == null || anim.clips.Length == 0 || preview == null)
+        {
+            return;
+        }
+
+        previewClipIndex = Mathf.Clamp(previewClipIndex, 0, anim.clips.Length - 1);
+        string[] options = new string[anim.clips.Length];
+        for(int i = 0; i < anim.clips.Length; ++i)
+        {
+            options[i] = anim.clips[i].name;
+        }
+        EditorGUILayout.Space();
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            EditorGUI.BeginChangeCheck();
+            previewClipIndex = EditorGUILayout.Popup(string.Empty, previewClipIndex, options);
+            if(EditorGUI.EndChangeCheck())
+            {
+                preview.Player.Play(options[previewClipIndex]);
+            }
+            if (preview.Player.IsPlaying && !preview.Player.IsTimeAtTheEndOfLoop)
+            {
+                if (GUILayout.Button("||", GUILayout.Width(50)))
+                {
+                    preview.Player.Stop();
+                }
+            }
+            else
+            {
+                Color guiColor = GUI.color;
+                GUI.color = Color.red;
+                if (GUILayout.Button(">", GUILayout.Width(50)))
+                {
+                    if(preview.Player.IsTimeAtTheEndOfLoop)
+                    {
+                        preview.Player.Play(options[previewClipIndex]);
+                    }
+                    else
+                    {
+                        preview.Player.Resume();
+                    }
+                }
+                GUI.color = guiColor;
+            }
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space();
+    }
+
+    /// <summary>
+    /// 限制相机的最远距离
+    /// </summary>
+    private void PreviewInteraction_CameraRestriction()
+    {
+        if(preview == null)
+        {
+            return;
+        }
+        Transform camTrans = cam.transform;
+        Transform modelTrans = preview.transform;
+        Vector3 lookAtPoint = modelTrans.position + camLookAtOffset;
+
+        Vector3 distV = camTrans.position - modelTrans.position;
+        if(distV.magnitude > 10)
+        {
+            distV.Normalize();
+            distV *= 10;
+            camTrans.position = modelTrans.position + distV;
+        }
+
+        camTrans.LookAt(lookAtPoint);
+    }
+
+    /// <summary>
+    /// 预览窗口的交互行为
+    /// </summary>
+    /// <param name="rect"></param>
+    private void PreviewInteraction(Rect rect)
+    {
+        if (cam != null)
+        {
+            Transform camTrans = cam.transform;
+            Transform modelTrans = preview.transform;
+
+            Vector3 lookAtPoint = modelTrans.position + camLookAtOffset;
+
+            Event e = Event.current; // 当前输入事件
+
+            Vector2 mousePos = e.mousePosition;
+            if(mousePos.x < rect.x || mousePos.x > rect.x + rect.width || mousePos.y < rect.y || mousePos.y > rect.y + rect.height)
+            {
+                return;
+            }
+
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Orbit); // 修改鼠标的光标
+
+            if(e.type == EventType.MouseDrag)
+            {
+                if (e.control)
+                {
+                    camLookAtOffset.y += e.delta.y * 0.02f; // 上下
+                }
+                else if(e.alt)
+                {
+                    camTrans.Translate(0, 0, -e.delta.y * 0.1f, Space.Self); // 前后
+                }
+                else // 旋转
+                {
+                    Vector3 v = camTrans.position - lookAtPoint;
+                    camTrans.Translate(-e.delta.x * 0.1f, e.delta.y * 0.1f, 0, Space.Self);
+                    Vector3 v2 = camTrans.position - lookAtPoint;
+                    v2 = v2.normalized * v.magnitude;
+                    camTrans.position = lookAtPoint + v2;
+                }
+            }
+        }
+    }
+    
+    private void OnGUI_EditBounds()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            BeginBox();
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical();
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        isBoundsFoldout = EditorGUILayout.Foldout(isBoundsFoldout, isBoundsFoldout ? string.Empty : "Bounds");
+                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_BOUNDS, isBoundsFoldout);
+                        GUILayout.FlexibleSpace();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (isBoundsFoldout)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        {
+                            GUILayout.Label("Bounds");
+                            boundsAutoExt = GUILayout.HorizontalSlider(boundsAutoExt, 0.0f, 1.0f);
+                            if (GUILayout.Button("Calculate Auto", GUILayout.Width(100)))
+                            {
+                                CalculateBoundsAuto();
+                            }
+                        }
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.Space();
+
+                        isBoundsVisible = EditorGUILayout.Toggle("Visible", isBoundsVisible);
+
+                        EditorGUILayout.Space();
+
+                        Color tempGUIColor = GUI.color;
+                        Vector3 boundsCenter = bounds.center; // 中心
+                        Vector3 boundsExts = bounds.extents; // 延伸
+                        {
+                            GUI.color = Color.red;
+                            boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -5, 5);
+                            boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 5);
+
+                            GUI.color = Color.green;
+                            boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -5, 5);
+                            boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 5);
+                            GUI.color = Color.blue;
+                            boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -5, 5);
+                            boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 5);
+                        }
+                        bounds.center = boundsCenter;
+                        bounds.extents = boundsExts;
+                        GUI.color = tempGUIColor;
+
+                        EditorGUILayout.Space();
+
+                        if (GUILayout.Button("Apply"))
+                        {
+                            mesh.bounds = bounds;
+                            anim.bounds = bounds;
+
+                            if(anim.lodMeshes != null)
+                            {
+                                for(int i = 0; i < anim.lodMeshes.Length; ++i)
+                                {
+                                    Mesh lodMesh = anim.lodMeshes[i];
+                                    if(lodMesh != null)
+                                    {
+                                        lodMesh.bounds = bounds;
+                                        EditorUtility.SetDirty(lodMesh);
+                                    }
+                                }
+                            }
+
+                            EditorUtility.SetDirty(mesh);
+                            ApplyAnimModification();
+                        }
+                    }
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+            }
+            EndBox();
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+    
+    private void OnGUI_Joints()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            BeginBox();
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical();
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        EditorGUILayout.Space();
+                        EditorGUILayout.Space();
+                        isJointsFoldout = EditorGUILayout.Foldout(isJointsFoldout, isJointsFoldout ? string.Empty : "Joints");
+                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_Joints, isJointsFoldout);
+                        GUILayout.FlexibleSpace();
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (isJointsFoldout)
+                    {
+                        OnGUI_Bone(anim.bones[anim.rootBoneIndex], 0);
+                    }
+                }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+            }
+            EndBox();
+            EditorGUILayout.Space();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void OnGUI_Bone(GPUSkinningBone bone, int indentLevel)
+    {
+        GUILayout.BeginHorizontal();
+        {
+            for (int i = 0; i < indentLevel; ++i)
+            {
+                GUILayout.Space(20);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            bool isExposed = GUILayout.Toggle(bone.isExposed, bone.name);
+            if(EditorGUI.EndChangeCheck())
+            {
+                bone.isExposed = isExposed;
+                ApplyAnimModification();
+            }
+        }
+        GUILayout.EndHorizontal();
+
+        int numChildren = bone.childrenBonesIndices == null ? 0 : bone.childrenBonesIndices.Length;
+        for (int i = 0; i < numChildren; ++i)
+        {
+            OnGUI_Bone(anim.bones[bone.childrenBonesIndices[i]], indentLevel + 1);
+        }
+    }
+    
     #endregion
 
     #region Common
@@ -847,126 +1242,18 @@ public class GPUSkinningSamplerEditor : Editor
         EditorGUI.indentLevel = lastIndentLevel;
     }
     
-    #endregion
-    
-    private void OnGUI_Preview(GPUSkinningSampler sampler)
+    private void GetLastGUIRect(ref Rect rect)
     {
-        BeginBox();
+        Rect guiRect = GUILayoutUtility.GetLastRect();
+        if (guiRect.x != 0)
         {
-            if (GUILayout.Button("Preview/Edit"))
-            {
-                anim = sampler.anim;
-                mesh = sampler.savedMesh;
-                mtrl = sampler.savedMtrl;
-                texture = sampler.texture;
-                textureBind = sampler.textureBind;
-                if (mesh != null)
-                {
-                    bounds = mesh.bounds;
-                }
-                if (anim == null || mesh == null || mtrl == null || texture == null || textureBind == null)
-                {
-                    EditorUtility.DisplayDialog("GPUSkinning", "Missing Sampling Resources", "OK");
-                }
-                else
-                {
-                    if (rt == null && !EditorApplication.isPlaying)
-                    {
-                        linearToGammeMtrl = new Material(Shader.Find("GPUSkinning/GPUSkinningSamplerEditor_LinearToGamma"));
-                        linearToGammeMtrl.hideFlags = HideFlags.HideAndDontSave;
-
-                        rt = new RenderTexture(1024, 1024, 32, RenderTextureFormat.Default, RenderTextureReadWrite.Default);
-                        rt.hideFlags = HideFlags.HideAndDontSave;
-
-                        if (PlayerSettings.colorSpace == ColorSpace.Linear)
-                        {
-                            rtGamma = new RenderTexture(512, 512, 0, RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
-                            rtGamma.hideFlags = HideFlags.HideAndDontSave;
-                        }
-
-                        GameObject camGo = new GameObject("GPUSkinningSamplerEditor_CameraGo");
-                        camGo.hideFlags = HideFlags.HideAndDontSave;
-                        cam = camGo.AddComponent<Camera>();
-                        cam.hideFlags = HideFlags.HideAndDontSave;
-                        cam.farClipPlane = 100;
-                        cam.targetTexture = rt;
-                        cam.enabled = false;
-                        cam.clearFlags = CameraClearFlags.SolidColor;
-                        cam.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 1);
-                        camGo.transform.position = new Vector3(999, 1002, 999);
-
-                        previewClipIndex = 0;
-
-                        GameObject previewGo = new GameObject("GPUSkinningPreview_Go");
-                        previewGo.hideFlags = HideFlags.HideAndDontSave;
-                        previewGo.transform.position = new Vector3(999, 999, 1002);
-                        preview = previewGo.AddComponent<GPUSkinningPlayerMono>();
-                        preview.hideFlags = HideFlags.HideAndDontSave;
-                        preview.Init(anim, mesh, mtrl, texture, textureBind);
-                        preview.Player.RootMotionEnabled = rootMotionEnabled;
-                        preview.Player.LODEnabled = false;
-                        preview.Player.CullingMode = GPUSKinningCullingMode.AlwaysAnimate;
-                    }
-                }
-            }
-            GetLastGUIRect(ref previewEditBtnRect);
-
-            if (rt != null)
-            {
-                int previewRectSize = Mathf.Min((int)(previewEditBtnRect.width * 0.9f), 512);
-                EditorGUILayout.BeginHorizontal();
-                {
-                    GUILayout.FlexibleSpace();
-                    EditorGUILayout.BeginVertical();
-                    {
-                        if (PlayerSettings.colorSpace == ColorSpace.Linear)
-                        {
-                            RenderTexture tempRT = RenderTexture.active;
-                            Graphics.Blit(rt, rtGamma, linearToGammeMtrl);
-                            RenderTexture.active = tempRT;
-                            GUILayout.Box(rtGamma, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
-                        }
-                        else
-                        {
-                            GUILayout.Box(rt, GUILayout.Width(previewRectSize), GUILayout.Height(previewRectSize));
-                        }
-                        GetLastGUIRect(ref interactionRect);
-                        PreviewInteraction(interactionRect);
-
-                        EditorGUILayout.HelpBox("Drag to Orbit\nCtrl + Drag to Pitch\nAlt+ Drag to Zoom\nPress P Key to Pause", MessageType.None);
-                    }
-                    EditorGUILayout.EndVertical();
-
-                    EditorGUI.ProgressBar(new Rect(interactionRect.x, interactionRect.y + interactionRect.height, interactionRect.width, 5), preview.Player.NormalizedTime, string.Empty);
-
-                    GUILayout.FlexibleSpace();
-                }
-                EditorGUILayout.EndHorizontal();
-
-                OnGUI_PreviewClipsOptions();
-
-                OnGUI_AnimTimeline();
-
-                EditorGUILayout.Space();
-
-                OnGUI_RootMotion();
-
-                EditorGUILayout.Space();
-
-                OnGUI_EditBounds();
-
-                EditorGUILayout.Space();
-
-                if (createMountPoint)
-                {
-                    OnGUI_Joints();
-                }
-            }
+            rect = guiRect;
         }
-        EndBox();
-
-        serializedObject.ApplyModifiedProperties();
     }
+    
+    #endregion
+
+    #region Anim
 
     private bool animTimeline_dragging = false;
     private void OnGUI_AnimTimeline()
@@ -1180,6 +1467,7 @@ public class GPUSkinningSamplerEditor : Editor
 		EditorGUI.HelpBox(bgRect, "Click to Add Event \nCtrl + Click to Delete", MessageType.None);
 	}
 
+    // 进度拖动柄
     private Rect OnGUI_AnimEvents_DrawThumb(Rect bgRect, float value01, bool isDragging)
     {
         Color c = isDragging ? new Color(0, 0.6f, 0.6f, 0.6f) : new Color(0, 0, 0, 0.5f);
@@ -1209,6 +1497,8 @@ public class GPUSkinningSamplerEditor : Editor
         return rectThumb;
     }
 
+    #endregion
+    
     private void OnGUI_RootMotion()
     {
         List<GPUSkinningClip> rootMotionClips = new List<GPUSkinningClip>();
@@ -1301,273 +1591,7 @@ public class GPUSkinningSamplerEditor : Editor
         }
         EndIndentLevel();
     }
-
-    private void OnGUI_EditBounds()
-    {
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.Space();
-            BeginBox();
-            {
-                EditorGUILayout.Space();
-                EditorGUILayout.BeginVertical();
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        isBoundsFoldout = EditorGUILayout.Foldout(isBoundsFoldout, isBoundsFoldout ? string.Empty : "Bounds");
-                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_BOUNDS, isBoundsFoldout);
-                        GUILayout.FlexibleSpace();
-                    }
-                    EditorGUILayout.EndHorizontal();
-
-                    if (isBoundsFoldout)
-                    {
-                        EditorGUILayout.BeginHorizontal();
-                        {
-                            GUILayout.Label("Bounds");
-                            boundsAutoExt = GUILayout.HorizontalSlider(boundsAutoExt, 0.0f, 1.0f);
-                            if (GUILayout.Button("Calculate Auto", GUILayout.Width(100)))
-                            {
-                                CalculateBoundsAuto();
-                            }
-                        }
-                        EditorGUILayout.EndHorizontal();
-                        EditorGUILayout.Space();
-
-                        isBoundsVisible = EditorGUILayout.Toggle("Visible", isBoundsVisible);
-
-                        EditorGUILayout.Space();
-
-                        Color tempGUIColor = GUI.color;
-                        Vector3 boundsCenter = bounds.center;
-                        Vector3 boundsExts = bounds.extents;
-                        {
-                            GUI.color = Color.red;
-                            boundsCenter.x = EditorGUILayout.Slider("center.x", boundsCenter.x, -5, 5);
-                            boundsExts.x = EditorGUILayout.Slider("extends.x", boundsExts.x, 0.1f, 5);
-
-                            GUI.color = Color.green;
-                            boundsCenter.y = EditorGUILayout.Slider("center.y", boundsCenter.y, -5, 5);
-                            boundsExts.y = EditorGUILayout.Slider("extends.y", boundsExts.y, 0.1f, 5);
-                            GUI.color = Color.blue;
-                            boundsCenter.z = EditorGUILayout.Slider("center.z", boundsCenter.z, -5, 5);
-                            boundsExts.z = EditorGUILayout.Slider("extends.z", boundsExts.z, 0.1f, 5);
-                        }
-                        bounds.center = boundsCenter;
-                        bounds.extents = boundsExts;
-                        GUI.color = tempGUIColor;
-
-                        EditorGUILayout.Space();
-
-                        if (GUILayout.Button("Apply"))
-                        {
-                            mesh.bounds = bounds;
-                            anim.bounds = bounds;
-
-                            if(anim.lodMeshes != null)
-                            {
-                                for(int i = 0; i < anim.lodMeshes.Length; ++i)
-                                {
-                                    Mesh lodMesh = anim.lodMeshes[i];
-                                    if(lodMesh != null)
-                                    {
-                                        lodMesh.bounds = bounds;
-                                        EditorUtility.SetDirty(lodMesh);
-                                    }
-                                }
-                            }
-
-                            EditorUtility.SetDirty(mesh);
-                            ApplyAnimModification();
-                        }
-                    }
-                }
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.Space();
-            }
-            EndBox();
-            EditorGUILayout.Space();
-        }
-        EditorGUILayout.EndHorizontal();
-    }
     
-    private void OnGUI_Joints()
-    {
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.Space();
-            BeginBox();
-            {
-                EditorGUILayout.Space();
-                EditorGUILayout.BeginVertical();
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    {
-                        EditorGUILayout.Space();
-                        EditorGUILayout.Space();
-                        isJointsFoldout = EditorGUILayout.Foldout(isJointsFoldout, isJointsFoldout ? string.Empty : "Joints");
-                        PrefsManager.SetEditorBool(Constants.EDITOR_PREFS_KEY_Joints, isJointsFoldout);
-                        GUILayout.FlexibleSpace();
-                    }
-                    EditorGUILayout.EndHorizontal();
-
-                    if (isJointsFoldout)
-                    {
-                        OnGUI_Bone(anim.bones[anim.rootBoneIndex], 0);
-                    }
-                }
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.Space();
-            }
-            EndBox();
-            EditorGUILayout.Space();
-        }
-        EditorGUILayout.EndHorizontal();
-    }
-
-    private void OnGUI_Bone(GPUSkinningBone bone, int indentLevel)
-    {
-        GUILayout.BeginHorizontal();
-        {
-            for (int i = 0; i < indentLevel; ++i)
-            {
-                GUILayout.Space(20);
-            }
-
-            EditorGUI.BeginChangeCheck();
-            bool isExposed = GUILayout.Toggle(bone.isExposed, bone.name);
-            if(EditorGUI.EndChangeCheck())
-            {
-                bone.isExposed = isExposed;
-                ApplyAnimModification();
-            }
-        }
-        GUILayout.EndHorizontal();
-
-        int numChildren = bone.childrenBonesIndices == null ? 0 : bone.childrenBonesIndices.Length;
-        for (int i = 0; i < numChildren; ++i)
-        {
-            OnGUI_Bone(anim.bones[bone.childrenBonesIndices[i]], indentLevel + 1);
-        }
-    }
-
-    private void OnGUI_PreviewClipsOptions()
-    {
-        if(anim.clips == null || anim.clips.Length == 0 || preview == null)
-        {
-            return;
-        }
-
-        previewClipIndex = Mathf.Clamp(previewClipIndex, 0, anim.clips.Length - 1);
-        string[] options = new string[anim.clips.Length];
-        for(int i = 0; i < anim.clips.Length; ++i)
-        {
-            options[i] = anim.clips[i].name;
-        }
-        EditorGUILayout.Space();
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.Space();
-            EditorGUI.BeginChangeCheck();
-            previewClipIndex = EditorGUILayout.Popup(string.Empty, previewClipIndex, options);
-            if(EditorGUI.EndChangeCheck())
-            {
-                preview.Player.Play(options[previewClipIndex]);
-            }
-            if (preview.Player.IsPlaying && !preview.Player.IsTimeAtTheEndOfLoop)
-            {
-                if (GUILayout.Button("||", GUILayout.Width(50)))
-                {
-                    preview.Player.Stop();
-                }
-            }
-            else
-            {
-                Color guiColor = GUI.color;
-                GUI.color = Color.red;
-                if (GUILayout.Button(">", GUILayout.Width(50)))
-                {
-                    if(preview.Player.IsTimeAtTheEndOfLoop)
-                    {
-                        preview.Player.Play(options[previewClipIndex]);
-                    }
-                    else
-                    {
-                        preview.Player.Resume();
-                    }
-                }
-                GUI.color = guiColor;
-            }
-            EditorGUILayout.Space();
-        }
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.Space();
-    }
-
-    private void PreviewInteraction_CameraRestriction()
-    {
-        if(preview == null)
-        {
-            return;
-        }
-        Transform camTrans = cam.transform;
-        Transform modelTrans = preview.transform;
-        Vector3 lookAtPoint = modelTrans.position + camLookAtOffset;
-
-        Vector3 distV = camTrans.position - modelTrans.position;
-        if(distV.magnitude > 10)
-        {
-            distV.Normalize();
-            distV *= 10;
-            camTrans.position = modelTrans.position + distV;
-        }
-
-        camTrans.LookAt(lookAtPoint);
-    }
-
-    private void PreviewInteraction(Rect rect)
-    {
-        if (cam != null)
-        {
-            Transform camTrans = cam.transform;
-            Transform modelTrans = preview.transform;
-
-            Vector3 lookAtPoint = modelTrans.position + camLookAtOffset;
-
-            Event e = Event.current;
-
-            Vector2 mousePos = e.mousePosition;
-            if(mousePos.x < rect.x || mousePos.x > rect.x + rect.width || mousePos.y < rect.y || mousePos.y > rect.y + rect.height)
-            {
-                return;
-            }
-
-            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Orbit);
-
-            if(e.type == EventType.MouseDrag)
-            {
-                if (e.control)
-                {
-                    camLookAtOffset.y += e.delta.y * 0.02f;
-                }
-                else if(e.alt)
-                {
-                    camTrans.Translate(0, 0, -e.delta.y * 0.1f, Space.Self);
-                }
-                else
-                {
-                    Vector3 v = camTrans.position - lookAtPoint;
-                    camTrans.Translate(-e.delta.x * 0.1f, e.delta.y * 0.1f, 0, Space.Self);
-                    Vector3 v2 = camTrans.position - lookAtPoint;
-                    v2 = v2.normalized * v.magnitude;
-                    camTrans.position = lookAtPoint + v2;
-                }
-            }
-        }
-    }
-
     private void PreviewDrawGrid()
     {
         if(gridGos == null)
@@ -1707,20 +1731,17 @@ public class GPUSkinningSamplerEditor : Editor
     private void CalculateBoundsAuto()
     {
         GPUSkinningBone[] bones = anim.bones;
-        Matrix4x4[] matrices = anim.clips[0].frames[0].matrices;
-        Matrix4x4 rootMatrice = matrices[anim.rootBoneIndex] * bones[anim.rootBoneIndex].bindpose;
-        //Matrix4x4 rootMotionInv = anim.clips[0].rootMotionEnabled ? matrices[anim.rootBoneIndex].inverse : Matrix4x4.identity;
-        Matrix4x4 rootMotionInv = anim.clips[0].rootMotionEnabled ? rootMatrice.inverse : Matrix4x4.identity;
-        
+        Matrix4x4[] matrices = anim.boundsMatrices;
+        Matrix4x4 rootMotionInv = anim.clips[0].rootMotionEnabled ? matrices[anim.rootBoneIndex].inverse : Matrix4x4.identity;
         Vector3 min = Vector3.one * 9999;
         Vector3 max = min * -1;
         for (int i = 0; i < bones.Length; ++i)
         {
-            // Vector4 pos = (rootMotionInv * matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
-            Vector4 pos = (rootMotionInv * matrices[i]) * new Vector4(0, 0, 0, 1);
+            Vector4 pos = (rootMotionInv * matrices[i] * bones[i].bindpose.inverse) * new Vector4(0, 0, 0, 1);
             min.x = Mathf.Min(min.x, pos.x);
             min.y = Mathf.Min(min.y, pos.y);
             min.z = Mathf.Min(min.z, pos.z);
+            
             max.x = Mathf.Max(max.x, pos.x);
             max.y = Mathf.Max(max.y, pos.y);
             max.z = Mathf.Max(max.z, pos.z);
@@ -1776,13 +1797,5 @@ public class GPUSkinningSamplerEditor : Editor
             property.SetValue(window, isLocked, null);
         }
     }
-
-    private void GetLastGUIRect(ref Rect rect)
-    {
-        Rect guiRect = GUILayoutUtility.GetLastRect();
-        if (guiRect.x != 0)
-        {
-            rect = guiRect;
-        }
-    }
+    
 }
