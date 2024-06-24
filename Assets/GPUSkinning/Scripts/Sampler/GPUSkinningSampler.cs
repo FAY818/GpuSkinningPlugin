@@ -622,13 +622,13 @@ public class GPUSkinningSampler : MonoBehaviour
         CreateVertexTexture(dir, gpuSkinningAnimation, smr.sharedMesh);
 
         /////////////////////////Mesh/////////////////////////
-        Mesh newMesh = CreateVertMesh(smr.sharedMesh, "GPUSkinning_VertMesh");
+        Mesh newMesh = CreateVertMesh(smr.sharedMesh, "GPUSkinning_VertexMesh");
         if (savedMesh != null)
         {
             newMesh.bounds = savedMesh.bounds;
         }
 
-        string savedMeshPath = dir + "/GPUSkinning_VertMesh_" + animName + ".asset";
+        string savedMeshPath = dir + "/GPUSkinning_VertexMesh_" + animName + ".asset";
         AssetDatabase.CreateAsset(newMesh, savedMeshPath);
         PrefsManager.SetString(Constants.TEMP_SAVED_MESH_VERTEX_PATH + animName, savedMeshPath);
         savedMesh = newMesh;
@@ -1564,7 +1564,7 @@ public class GPUSkinningSampler : MonoBehaviour
             mtrl.CopyPropertiesFromMaterial(smr.sharedMaterial);
         }
 
-        string savedMtrlPath = dir + "/GPUSKinning_VertMaterial_" + animName + ".mat";
+        string savedMtrlPath = dir + "/GPUSKinning_VertexMaterial_" + animName + ".mat";
         AssetDatabase.CreateAsset(mtrl, savedMtrlPath);
         PrefsManager.SetString(Constants.TEMP_SAVED_MTRL_VERTEX_PATH + animName, savedMtrlPath);
     }
@@ -1629,11 +1629,11 @@ public class GPUSkinningSampler : MonoBehaviour
     
     private void CreateVertexPrefab(string savePath)
     {
-        string prefabFileName = "GPUSKinning_VertPrefab_" + animName + ".prefab";
-        string dataFileName = "GPUSKinning_VertAnim_" + animName + ".asset";
-        string meshFileName = "GPUSKinning_VertMesh_" + animName + ".asset";
-        string mtrlFileName = "GPUSKinning_VertMaterial_" + animName + ".mat";
-        string textureRawDataFileName = "GPUSKinning_VertTexture_" + animName + ".bytes";
+        string prefabFileName = "GPUSKinning_VertexPrefab_" + animName + ".prefab";
+        string dataFileName = "GPUSKinning_VertexAnim_" + animName + ".asset";
+        string meshFileName = "GPUSKinning_VertexMesh_" + animName + ".asset";
+        string mtrlFileName = "GPUSKinning_VertexMaterial_" + animName + ".mat";
+        string textureRawDataFileName = "GPUSKinning_VertexTexture_" + animName + ".bytes";
         string textureRawBindDataFileName = "GPUSKinning_TextureBind_" + animName + ".bytes";
         
         GameObject prefab = new GameObject(prefabFileName);
