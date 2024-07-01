@@ -314,7 +314,7 @@ public class GPUSkinningSampler : MonoBehaviour
 
             runtimeAnimatorController = animator.runtimeAnimatorController;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate; // 对象处于摄像机视锥体之外，或者处于非活动状态，持续更新动画状态并计算动画
-            //InitTransform();
+            InitTransform();
             return;
         }
 
@@ -843,6 +843,11 @@ public class GPUSkinningSampler : MonoBehaviour
     private void CollectBones(List<GPUSkinningBone> bones_result, Transform[] bones_smr, Matrix4x4[] bindposes,
         GPUSkinningBone parentBone, Transform currentBoneTransform, int currentBoneIndex)
     {
+        if (bones_smr.Length != bindposes.Length)
+        {
+                Debug.LogError("The number of bones and bindposes is not equal.");
+        }
+
         GPUSkinningBone currentBone = new GPUSkinningBone();
         bones_result.Add(currentBone);
 
@@ -966,21 +971,35 @@ public class GPUSkinningSampler : MonoBehaviour
         int index = System.Array.IndexOf(gpuSkinningAnimation.bones, bone);
         return index;
     }
-
+    
+    // 获取骨骼矩阵的父索引
     private int GetSkinningBoneParentIndex(GPUSkinningBone bone)
     {
-        if (bone.parentBoneIndex == -1)
+        if (!bone.isSkinningBone)
+        {
+            Debug.LogError("The bone is not a skinning bone.");
+        }
+        int index = bone.parentBoneIndex;
+        if (index == -1)
         {
             return -1;
         }
 
         GPUSkinningBone parentBone = gpuSkinningAnimation.bones[bone.parentBoneIndex];
-        if (!parentBone.isSkinningBone)
-        {
-            return -1;
-        }
 
-        int index = System.Array.IndexOf(gpuSkinningAnimation.skinningBones, parentBone);
+        while (!parentBone.isSkinningBone)
+        {
+            index = parentBone.parentBoneIndex;
+            if (index != -1)
+            {
+                parentBone = gpuSkinningAnimation.bones[index];
+            }
+            else
+            {
+                break;
+            }
+        }
+        index = System.Array.IndexOf(gpuSkinningAnimation.skinningBones, parentBone);
         return index;
     }
 
@@ -1001,7 +1020,6 @@ public class GPUSkinningSampler : MonoBehaviour
         }
         
         /////////////////////////骨骼/////////////////////////
-        
         // 骨骼相关信息，每次开始采样前都重新赋值新的GPUSkinningBone数据对象
         List<GPUSkinningBone> bones_result = new List<GPUSkinningBone>();
         CollectBones(bones_result, smr.bones, mesh.bindposes, null, rootBoneTransform, 0);
@@ -1126,6 +1144,12 @@ public class GPUSkinningSampler : MonoBehaviour
         for (int i = 0; i < numVertices; ++i)
         {
             BoneWeight boneWeight = boneWeights[i];
+
+            if (boneWeight.boneIndex0 >= smrBones.Length || boneWeight.boneIndex1 >= smrBones.Length ||
+                boneWeight.boneIndex2 >= smrBones.Length || boneWeight.boneIndex3 >= smrBones.Length)
+            {
+                    Debug.LogError("BoneWeight index out of range!");
+            }
 
             // 4根骨骼
             BoneWeightSortData[] weights = new BoneWeightSortData[4];
@@ -1376,9 +1400,12 @@ public class GPUSkinningSampler : MonoBehaviour
                 //逐骨骼
                 for (int matrixIndex = 0; matrixIndex < numMatrices; ++matrixIndex)
                 {
-                    if (gpuSkinningAnim.bones[matrixIndex].isSkinningBone)
+                    GPUSkinningBone bone = gpuSkinningAnim.bones[matrixIndex];
+                    if (bone.isSkinningBone)
                     {
-                        Matrix4x4 matrix = matrices[matrixIndex]; // 骨骼的变换矩阵
+                        //Matrix4x4 matrix = matrices[matrixIndex]; // 骨骼的变换矩阵
+
+                        Matrix4x4 matrix = linkParentBoneMatrix4X4(matrices, matrixIndex, gpuSkinningAnim);
                         Quaternion rotation = GPUSkinningUtil.ToQuaternion(matrix); // 提取旋转相关的4元数
                         Vector3 scale = matrix.lossyScale;
                         var pos = matrix.GetColumn(3);
@@ -1405,6 +1432,53 @@ public class GPUSkinningSampler : MonoBehaviour
         }
 
         PrefsManager.SetString(Constants.TEMP_SAVED_TEXTURE_PATH + animName, savedPath);
+    }
+
+    // 骨骼链不一定是连续的，也许会因为StripBones选项，或者建模时的虚拟体导致骨骼链中断，需要补齐
+    private Matrix4x4 linkParentBoneMatrix4X4(Matrix4x4[] matrices, int matrixIndex, GPUSkinningAnimation gpuSkinningAnim)
+    {
+        
+        GPUSkinningBone bone = gpuSkinningAnim.bones[matrixIndex];
+        // 检测是否是蒙皮骨骼
+        Matrix4x4 matrix = matrices[matrixIndex];
+        if (!bone.isSkinningBone)
+        {
+            Debug.LogError("The bone is not a skinning bone.");
+            return matrix;
+        }
+        
+        GPUSkinningBone rootBone = gpuSkinningAnim.skinningBones[0];
+        int rootIndex = GetBoneIndex(rootBone);
+        // 根节点直接返回
+        if (rootIndex == matrixIndex)
+        {
+            return matrix;
+        }
+
+        int parentIndex = bone.parentBoneIndex;
+        GPUSkinningBone parentBone = gpuSkinningAnimation.bones[parentIndex];
+        while (!parentBone.isSkinningBone)
+        {
+            matrix = matrices[parentIndex] * matrix;
+            parentIndex = parentBone.parentBoneIndex; // 向上层查找
+
+            if (parentIndex == -1)
+            {
+                Debug.LogError("The bone is not linked to Root skinning bone");
+                return matrix;
+            }
+
+            if (parentIndex != rootIndex)
+            {
+                parentBone = gpuSkinningAnimation.bones[parentIndex];
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        return matrix;
     }
 
     private void CreateVertexTexture(string dir, GPUSkinningAnimation gpuSkinningAnim, Mesh mesh)
